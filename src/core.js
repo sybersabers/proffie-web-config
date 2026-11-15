@@ -39,6 +39,13 @@ const APP_VER = '1.0 (2026-11-15)';
 /** お店の情報 */
 const SHOP = {name: 'SYBER SABERS', url: 'https://sybersabers.com/', mail: ['info', 'sybersabers.com'], utm: 'utm_source=webconfig&utm_medium=referral&utm_campaign=proffie_web_config'};
 const shopUrl = (path = '') => SHOP.url + path + (path.includes('?') ? '&' : '?') + SHOP.utm;
+/** おすすめ商品（Amazon）。日本語表示のときだけ出す（Amazon.co.jp は海外から使えないため）。
+ *  アソシエイトのリンクに差し替えたら AFFILIATE を true にすると「PR」表示とフッターの定型文が出る */
+const AFFILIATE = false;
+const REC = {sd: 'https://amzn.asia/d/0aTY8NEH', cable: 'https://amzn.asia/d/0aAqD7d0'};
+const recLink = (key, label) => lang === 'ja'
+  ? `<a class="reclink" href="${REC[key]}" target="_blank" rel="noopener${AFFILIATE ? ' sponsored' : ''}">${label}${AFFILIATE ? '<span class="pr">PR</span>' : ''}</a>`
+  : '';
 /** SD チェックの目安（同時に鳴らせる音の数）。仮の値：実測で調整する */
 const SD_GOOD = 8, SD_OK = 4;
 const VOL_SAFE = 1500, VOL_HARD = 3000;
