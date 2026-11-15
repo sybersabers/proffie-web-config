@@ -322,6 +322,9 @@
   .sd-bad{color:#ffb3bb;border-color:var(--bad);background:rgba(255,90,106,.08)}
   table.kv{width:auto} table.kv th{font-family:inherit;letter-spacing:0;color:var(--muted);padding:5px 18px 5px 0;border:none} table.kv td{border:none;padding:5px 0;font-family:var(--disp);font-size:15px}
   a.btn{display:inline-block;text-decoration:none}
+  .reclink{white-space:nowrap}
+  .trouble .reclink{color:var(--accent);margin-left:4px}
+  .reclink .pr{display:inline-block;margin-left:6px;padding:0 5px;font:10px var(--mono);letter-spacing:.06em;border:1px solid currentColor;opacity:.75;vertical-align:1px}
   dialog{background:rgba(6,15,26,.98);color:var(--text);border:1px solid var(--line2);border-radius:0;padding:20px 22px;max-width:520px;
     clip-path:polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px);box-shadow:0 0 40px rgba(55,226,255,.2)}
   dialog::backdrop{background:rgba(0,4,10,.72)}
@@ -350,7 +353,7 @@
 <main id="main"></main>
 <div id="boot" aria-live="polite"><div class="boot-in"><div class="boot-bar"><span id="bootFill"></span><b id="bootPct">0</b></div><div class="boot-step mono" id="bootStep"></div><div class="boot-sub mono" id="bootSub"></div></div></div>
 
-<footer><p class="shop"><span data-t="madeBy"></span> <a id="shopLink" target="_blank" rel="noopener"><b>SYBER SABERS</b></a></p><p><a href="#" id="mailLink" data-t="contact"></a></p><p data-t="disclaimer"></p><p>ProffieOS © Fredrik Hubinette — <a href="https://pod.hubbe.net/" target="_blank" rel="noopener" data-t="footerDocs"></a></p></footer>
+<footer><p class="shop"><span data-t="madeBy"></span> <a id="shopLink" target="_blank" rel="noopener"><b>SYBER SABERS</b></a></p><p><a href="#" id="mailLink" data-t="contact"></a></p><p data-t="disclaimer"></p><p id="affNote" hidden></p><p>ProffieOS © Fredrik Hubinette — <a href="https://pod.hubbe.net/" target="_blank" rel="noopener" data-t="footerDocs"></a></p></footer>
 
 <dialog id="dlg"><h3 id="dlgTitle"></h3><p id="dlgBody"></p><div class="actions"><button class="btn primary" id="dlgOk">OK</button></div></dialog>
 <div class="toast" id="toast"></div>

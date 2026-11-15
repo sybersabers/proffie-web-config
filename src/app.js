@@ -660,6 +660,7 @@ const App = {
   renderStatic(){
     document.querySelectorAll('[data-t]').forEach(el => { el.innerHTML = t(el.dataset.t); });
     const s = $('shopLink'); if (s) s.href = shopUrl();
+    const a = $('affNote'); if (a) { a.hidden = !(AFFILIATE && lang === 'ja'); a.textContent = t('affNote'); }
   },
   /** お問い合わせ：アドレスはページに文字で置かず、押したときに組み立てる（収集対策） */
   openMail(){
@@ -694,7 +695,7 @@ const App = {
   },
 
   stepsHtml(){ return `<ol class="steps">${['step1', 'step2', 'step3', 'step4'].map(k => `<li><span>${t(k)}</span></li>`).join('')}</ol>`; },
-  troubleHtml(){ return `<ul class="trouble"><li>${t('trouble1')}</li><li>${t('trouble2')}</li><li>${t('trouble4')}</li><li>${t('trouble3')}</li></ul>`; },
+  troubleHtml(){ return `<ul class="trouble"><li>${t('trouble1')} ${recLink('cable', t('recCable'))}</li><li>${t('trouble2')}</li><li>${t('trouble4')}</li><li>${t('trouble3')}</li></ul>`; },
   welcomeHtml(){
     return `<section class="welcome">
       <div class="w-left">
@@ -925,7 +926,7 @@ const App = {
         ${r.openMs != null ? `<tr><th>${t('sdOpen')}</th><td>${r.openMs.toFixed(1)} ms</td></tr>` : ''}
         <tr><th>${t('sdFiles')}</th><td>${r.files}</td></tr></table>
         <p class="hint">${t('sdGuide', {g: SD_GOOD, o: SD_OK})}</p>
-        ${lv !== 'good' ? `<p><a class="btn" href="${shopUrl()}" target="_blank" rel="noopener">${t('sdShop')}</a></p>` : ''}
+        ${lv !== 'good' ? `<p>${lang === 'ja' ? recLink('sd', t('sdShop')).replace('class="reclink"', 'class="btn reclink"') : `<a class="btn" href="${shopUrl()}" target="_blank" rel="noopener">${t('sdShop')}</a>`}</p>` : ''}
       </div></div></section>`;
     return h;
   },
