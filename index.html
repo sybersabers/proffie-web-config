@@ -257,7 +257,10 @@
   .steps li:hover{transform:translateX(6px);background:rgba(55,226,255,.06)}
   .privacy{color:var(--muted);font-size:13px;margin:0;text-align:center}
   .trouble-card{padding:14px 20px}
-  .trouble-card .tt{display:flex;gap:10px;align-items:center;font-weight:700;color:#ffc58f}
+  .trouble-card .tt{display:flex;gap:10px;align-items:center;font-weight:700;color:#ffc58f;cursor:pointer;list-style:none;user-select:none}
+  .trouble-card .tt::-webkit-details-marker{display:none}
+  .trouble-card .tt::after{content:'＋';margin-left:auto;font-family:var(--mono);color:var(--muted)}
+  .trouble-card[open] .tt::after{content:'－'}
   .trouble-card .tt::before{content:'';width:8px;height:8px;background:var(--warn);box-shadow:0 0 8px var(--warn)}
   .trouble{margin:10px 0 0;padding-left:20px;font-size:13px;line-height:1.85;color:#cfe3ee}
   .trouble li{margin:2px 0}
@@ -357,7 +360,7 @@
 <main id="main"></main>
 <div id="boot" aria-live="polite"><div class="boot-in"><div class="boot-bar"><span id="bootFill"></span><b id="bootPct">0</b></div><div class="boot-step mono" id="bootStep"></div><div class="boot-sub mono" id="bootSub"></div></div></div>
 
-<footer><p class="shop"><span data-t="madeBy"></span> <a id="shopLink" target="_blank" rel="noopener"><b>SYBER SABERS</b></a></p><p><a href="#" id="mailLink" data-t="contact"></a></p><p data-t="disclaimer"></p><p id="affNote" hidden></p><p>ProffieOS © Fredrik Hubinette — <a href="https://pod.hubbe.net/" target="_blank" rel="noopener" data-t="footerDocs"></a></p></footer>
+<footer><p class="shop"><span data-t="madeBy"></span> <a id="shopLink" target="_blank" rel="noopener"><b>SYBER SABERS</b></a></p><p><a href="#" id="mailLink" data-t="contact"></a></p><p data-t="privacy"></p><p data-t="disclaimer"></p><p id="affNote" hidden></p><p>ProffieOS © Fredrik Hubinette — <a href="https://pod.hubbe.net/" target="_blank" rel="noopener" data-t="footerDocs"></a></p></footer>
 
 <dialog id="dlg"><h3 id="dlgTitle"></h3><p id="dlgBody"></p><div class="actions"><button class="btn primary" id="dlgOk">OK</button></div></dialog>
 <div class="toast" id="toast"></div>
@@ -379,8 +382,8 @@ ja: {
   step1: 'パソコン版の Chrome か Edge でこのページを開く',
   step2: 'Arduino IDE など、ほかの設定ツールを閉じる',
   step3: '<b>データ通信対応</b>の USB ケーブルでセーバーをつなぐ',
-  step4: '「CONNECT」を押して Proffieboard を選ぶ', help: '？ 使い方',
-  privacy: 'すべてパソコンの中で動作し、データが外部へ送られることはありません。',
+  step4: '「CONNECT」→ 一覧から選んで「接続」', help: '？ 使い方',
+  privacy: '設定はこのパソコンとセーバーの間だけでやり取りします。',
   troubleTitle: 'つながらないときは',
   trouble1: '一覧に出ない → 充電専用ケーブルの可能性。別のケーブルで試す',
   trouble2: '「ポートを開けません」→ Arduino IDE や別タブの設定ツールを閉じる',
@@ -507,8 +510,8 @@ en: {
   step1: 'Open this page in Chrome or Edge on a computer',
   step2: 'Close Arduino IDE and other config tools (they block the USB port)',
   step3: 'Connect the saber with a <b>data-capable</b> USB cable',
-  step4: 'Click "CONNECT" and choose the Proffieboard', help: '? Help',
-  privacy: 'Runs entirely on your computer. No data is sent anywhere.',
+  step4: 'Click "CONNECT", pick it from the list, then "Connect"', help: '? Help',
+  privacy: 'Settings travel only between this computer and your saber.',
   troubleTitle: 'Trouble connecting?',
   trouble1: 'Nothing in the list → it may be a charge-only cable. Try another cable.',
   trouble2: '"Cannot open port" → close Arduino IDE (including Serial Monitor) and any other config tool tabs.',
@@ -1212,9 +1215,11 @@ const App = {
 
   async connect(){
     try {
-      if (!(await Proffie.connect())) { showDialog(t('noBoard'), t('noBoardBody')); return; }
+      if (!(await Proffie.connect())) { this.openTrouble(); showDialog(t('noBoard'), t('noBoardBody')); return; }
       await this.readWithBoot();
-    } catch (e) { this.bootEnd(false); showDialog(e.title || t('error'), e.message); }
+    } catch (e) { this.bootEnd(false); this.openTrouble(); showDialog(e.title || t('error'), e.message); }
+  },
+  openTrouble(){ const d = $('trouble'); if (d) d.open = true;
   },
 
   async q(cmd, opt){
@@ -1866,7 +1871,7 @@ const App = {
     this.bind();
   },
 
-  stepsHtml(){ return `<ol class="steps">${['step1', 'step2', 'step3', 'step4'].map(k => `<li><span>${t(k)}</span></li>`).join('')}</ol>`; },
+  stepsHtml(){ return `<ol class="steps">${['step2', 'step3', 'step4'].map(k => `<li><span>${t(k)}</span></li>`).join('')}</ol>`; },
   troubleHtml(){ return `<ul class="trouble"><li>${t('trouble1')} ${recLink('cable', t('recCable'))}</li><li>${t('trouble2')}</li><li>${t('trouble4')}</li><li>${t('trouble3')}</li></ul>`; },
   welcomeHtml(){
     return `<section class="welcome">
@@ -1886,14 +1891,13 @@ const App = {
           </svg>
           <button class="cta" id="btnConnect2">CONNECT</button>
         </div>
-        <p class="privacy">🔒 ${t('privacy')}</p>
         <p class="presented mono">PRESENTED BY <a href="${shopUrl()}" target="_blank" rel="noopener">${SHOP.name}</a></p>
       </div>
       <div class="w-right">
         <div><div class="mono w-kick">PROFFIEBOARD // WEB SERIAL</div><h1 class="w-title">${t('wTitle')}</h1><p class="w-sub">${t('wSub')}</p></div>
         <div class="mono hint">SETUP SEQUENCE</div>
         <div class="hud">${this.stepsHtml()}</div>
-        <div class="hud trouble-card"><div class="tt">${t('troubleTitle')}</div>${this.troubleHtml()}</div>
+        <details class="hud trouble-card" id="trouble"><summary class="tt">${t('troubleTitle')}</summary>${this.troubleHtml()}</details>
       </div></section>`;
   },
   swatch(v, cls = ''){ const c = PP.color16(v); return c ? `<span class="sw ${cls}" style="background:rgb(${c.r},${c.g},${c.b})"></span>` : `<span class="sw sw-none ${cls}"></span>`; },

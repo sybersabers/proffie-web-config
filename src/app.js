@@ -40,9 +40,11 @@ const App = {
 
   async connect(){
     try {
-      if (!(await Proffie.connect())) { showDialog(t('noBoard'), t('noBoardBody')); return; }
+      if (!(await Proffie.connect())) { this.openTrouble(); showDialog(t('noBoard'), t('noBoardBody')); return; }
       await this.readWithBoot();
-    } catch (e) { this.bootEnd(false); showDialog(e.title || t('error'), e.message); }
+    } catch (e) { this.bootEnd(false); this.openTrouble(); showDialog(e.title || t('error'), e.message); }
+  },
+  openTrouble(){ const d = $('trouble'); if (d) d.open = true;
   },
 
   async q(cmd, opt){
@@ -694,7 +696,7 @@ const App = {
     this.bind();
   },
 
-  stepsHtml(){ return `<ol class="steps">${['step1', 'step2', 'step3', 'step4'].map(k => `<li><span>${t(k)}</span></li>`).join('')}</ol>`; },
+  stepsHtml(){ return `<ol class="steps">${['step2', 'step3', 'step4'].map(k => `<li><span>${t(k)}</span></li>`).join('')}</ol>`; },
   troubleHtml(){ return `<ul class="trouble"><li>${t('trouble1')} ${recLink('cable', t('recCable'))}</li><li>${t('trouble2')}</li><li>${t('trouble4')}</li><li>${t('trouble3')}</li></ul>`; },
   welcomeHtml(){
     return `<section class="welcome">
@@ -714,14 +716,13 @@ const App = {
           </svg>
           <button class="cta" id="btnConnect2">CONNECT</button>
         </div>
-        <p class="privacy">🔒 ${t('privacy')}</p>
         <p class="presented mono">PRESENTED BY <a href="${shopUrl()}" target="_blank" rel="noopener">${SHOP.name}</a></p>
       </div>
       <div class="w-right">
         <div><div class="mono w-kick">PROFFIEBOARD // WEB SERIAL</div><h1 class="w-title">${t('wTitle')}</h1><p class="w-sub">${t('wSub')}</p></div>
         <div class="mono hint">SETUP SEQUENCE</div>
         <div class="hud">${this.stepsHtml()}</div>
-        <div class="hud trouble-card"><div class="tt">${t('troubleTitle')}</div>${this.troubleHtml()}</div>
+        <details class="hud trouble-card" id="trouble"><summary class="tt">${t('troubleTitle')}</summary>${this.troubleHtml()}</details>
       </div></section>`;
   },
   swatch(v, cls = ''){ const c = PP.color16(v); return c ? `<span class="sw ${cls}" style="background:rgb(${c.r},${c.g},${c.b})"></span>` : `<span class="sw sw-none ${cls}"></span>`; },

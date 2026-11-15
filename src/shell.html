@@ -253,7 +253,10 @@
   .steps li:hover{transform:translateX(6px);background:rgba(55,226,255,.06)}
   .privacy{color:var(--muted);font-size:13px;margin:0;text-align:center}
   .trouble-card{padding:14px 20px}
-  .trouble-card .tt{display:flex;gap:10px;align-items:center;font-weight:700;color:#ffc58f}
+  .trouble-card .tt{display:flex;gap:10px;align-items:center;font-weight:700;color:#ffc58f;cursor:pointer;list-style:none;user-select:none}
+  .trouble-card .tt::-webkit-details-marker{display:none}
+  .trouble-card .tt::after{content:'＋';margin-left:auto;font-family:var(--mono);color:var(--muted)}
+  .trouble-card[open] .tt::after{content:'－'}
   .trouble-card .tt::before{content:'';width:8px;height:8px;background:var(--warn);box-shadow:0 0 8px var(--warn)}
   .trouble{margin:10px 0 0;padding-left:20px;font-size:13px;line-height:1.85;color:#cfe3ee}
   .trouble li{margin:2px 0}
@@ -353,7 +356,7 @@
 <main id="main"></main>
 <div id="boot" aria-live="polite"><div class="boot-in"><div class="boot-bar"><span id="bootFill"></span><b id="bootPct">0</b></div><div class="boot-step mono" id="bootStep"></div><div class="boot-sub mono" id="bootSub"></div></div></div>
 
-<footer><p class="shop"><span data-t="madeBy"></span> <a id="shopLink" target="_blank" rel="noopener"><b>SYBER SABERS</b></a></p><p><a href="#" id="mailLink" data-t="contact"></a></p><p data-t="disclaimer"></p><p id="affNote" hidden></p><p>ProffieOS © Fredrik Hubinette — <a href="https://pod.hubbe.net/" target="_blank" rel="noopener" data-t="footerDocs"></a></p></footer>
+<footer><p class="shop"><span data-t="madeBy"></span> <a id="shopLink" target="_blank" rel="noopener"><b>SYBER SABERS</b></a></p><p><a href="#" id="mailLink" data-t="contact"></a></p><p data-t="privacy"></p><p data-t="disclaimer"></p><p id="affNote" hidden></p><p>ProffieOS © Fredrik Hubinette — <a href="https://pod.hubbe.net/" target="_blank" rel="noopener" data-t="footerDocs"></a></p></footer>
 
 <dialog id="dlg"><h3 id="dlgTitle"></h3><p id="dlgBody"></p><div class="actions"><button class="btn primary" id="dlgOk">OK</button></div></dialog>
 <div class="toast" id="toast"></div>
