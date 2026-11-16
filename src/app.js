@@ -897,7 +897,7 @@ const App = {
     const g = d.gestures || (o && o.gestures) || {swingon: 1, twistoff: 1, forcepush: 1, gestureon: 1};
     const J = lang === 'ja', k = buttons === 1 ? 'b1' : 'b2';
     const tbl = (list, title, w = 42) => `<table class="ctl"><colgroup><col style="width:${w}%"><col></colgroup><tr><th colspan="2">${title}</th></tr>${CTRL.rows(list, g, defs).map(r =>
-      `<tr><td>${J ? r[0] : r[1]}</td><td>${(J ? r[2] : r[3]).replace(/\b(PWR|AUX)\b/g, '<kbd>$1</kbd>')}</td></tr>`).join('')}</table>`;
+      `<tr><td>${J ? r[0] : r[1]}</td><td>${(J ? r[2] : r[3]).replace(/<small>(.*?)<\/small>/g, (m, x) => `<small>${x.replace(/／| \/ /g, '<br>')}</small>`).replace(/\b(PWR|AUX)\b/g, '<kbd>$1</kbd>')}</td></tr>`).join('')}</table>`;
     let h = `<div class="sheet-tools"><button class="btn primary" id="btnPrint">${t('printBtn')}</button><span class="hint">${t('pdfHint')}</span>
       <span class="hint">${o ? t('srcCfg', {f: esc(o.name)}) : t('srcStd')}${d.gestures ? P().s : ''}${d.gestures ? t('srcBoard') : ''}</span>
       ${this.advanced ? `<span class="sp"></span><button class="btn small" id="btnCfg">${t('loadCfg')}</button><input type="file" id="cfgFile" accept=".h,.txt" hidden>

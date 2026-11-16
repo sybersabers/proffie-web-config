@@ -81,7 +81,7 @@ const CTRL = {
     ['カラーチェンジ', 'Color change', 'AUX ホールド＋PWR クリック（平行または下向き）<br><small>回転で選択／PWR クリックで保存／AUX クリックで戻す</small>', 'Hold AUX + click PWR (parallel or down)<br><small>Rotate / click PWR to save / click AUX to revert</small>'],
     ['省電力モード', 'Power save', 'AUX ホールド＋PWR クリック（真上に向けて）', 'Hold AUX + click PWR (pointing up)'],
     ['スタイル切替', 'Change style', 'AUX ホールド＋PWR ロングクリック（下向きで前へ）', 'Hold AUX + long click PWR (pointing down = previous)'],
-    ['マルチフェーズ', 'Multi-phase', 'AUX ホールド＋ツイスト（次）／PWR ホールド＋ツイスト（前）', 'Hold AUX + twist (next) / hold PWR + twist (prev)', 'd:multiPhase']
+    ['マルチフェーズ', 'Multi-phase', 'AUX ホールド＋ツイスト（次）<br>PWR ホールド＋ツイスト（前）', 'Hold AUX + twist (next)<br>Hold PWR + twist (prev)', 'd:multiPhase']
   ],
   b2battle: [
     ['バトルモード 切替', 'Battle Mode on / off', 'AUX ホールド＋スイング（点灯中）', 'Hold AUX + swing (while on)', 'd:hbl'],

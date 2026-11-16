@@ -1203,7 +1203,7 @@ const CTRL = {
     ['カラーチェンジ', 'Color change', 'AUX ホールド＋PWR クリック（平行または下向き）<br><small>回転で選択／PWR クリックで保存／AUX クリックで戻す</small>', 'Hold AUX + click PWR (parallel or down)<br><small>Rotate / click PWR to save / click AUX to revert</small>'],
     ['省電力モード', 'Power save', 'AUX ホールド＋PWR クリック（真上に向けて）', 'Hold AUX + click PWR (pointing up)'],
     ['スタイル切替', 'Change style', 'AUX ホールド＋PWR ロングクリック（下向きで前へ）', 'Hold AUX + long click PWR (pointing down = previous)'],
-    ['マルチフェーズ', 'Multi-phase', 'AUX ホールド＋ツイスト（次）／PWR ホールド＋ツイスト（前）', 'Hold AUX + twist (next) / hold PWR + twist (prev)', 'd:multiPhase']
+    ['マルチフェーズ', 'Multi-phase', 'AUX ホールド＋ツイスト（次）<br>PWR ホールド＋ツイスト（前）', 'Hold AUX + twist (next)<br>Hold PWR + twist (prev)', 'd:multiPhase']
   ],
   b2battle: [
     ['バトルモード 切替', 'Battle Mode on / off', 'AUX ホールド＋スイング（点灯中）', 'Hold AUX + swing (while on)', 'd:hbl'],
@@ -2151,7 +2151,7 @@ const App = {
     const g = d.gestures || (o && o.gestures) || {swingon: 1, twistoff: 1, forcepush: 1, gestureon: 1};
     const J = lang === 'ja', k = buttons === 1 ? 'b1' : 'b2';
     const tbl = (list, title, w = 42) => `<table class="ctl"><colgroup><col style="width:${w}%"><col></colgroup><tr><th colspan="2">${title}</th></tr>${CTRL.rows(list, g, defs).map(r =>
-      `<tr><td>${J ? r[0] : r[1]}</td><td>${(J ? r[2] : r[3]).replace(/\b(PWR|AUX)\b/g, '<kbd>$1</kbd>')}</td></tr>`).join('')}</table>`;
+      `<tr><td>${J ? r[0] : r[1]}</td><td>${(J ? r[2] : r[3]).replace(/<small>(.*?)<\/small>/g, (m, x) => `<small>${x.replace(/／| \/ /g, '<br>')}</small>`).replace(/\b(PWR|AUX)\b/g, '<kbd>$1</kbd>')}</td></tr>`).join('')}</table>`;
     let h = `<div class="sheet-tools"><button class="btn primary" id="btnPrint">${t('printBtn')}</button><span class="hint">${t('pdfHint')}</span>
       <span class="hint">${o ? t('srcCfg', {f: esc(o.name)}) : t('srcStd')}${d.gestures ? P().s : ''}${d.gestures ? t('srcBoard') : ''}</span>
       ${this.advanced ? `<span class="sp"></span><button class="btn small" id="btnCfg">${t('loadCfg')}</button><input type="file" id="cfgFile" accept=".h,.txt" hidden>
