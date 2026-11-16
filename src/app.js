@@ -922,18 +922,16 @@ const App = {
       </div></section>`;
     return h;
   },
-  /** 横ゲージ。s=null は計測中。目盛りは 0〜SD_MAX */
+  /** 横ゲージ（BAD / GOOD / BEST の区間式）。s=null は計測中 */
   sdGauge(s, lv){
-    const pct = v => (Math.max(0, Math.min(SD_MAX, v)) / SD_MAX * 100).toFixed(2) + '%';
-    const anim = s != null && this.sdAnim;
+    const anim = s != null && this.sdAnim, max = s != null && s >= SD_FULL;
     const stamp = s == null ? '' : `<span class="sdg-stamp sd-${lv}">${{good: 'BEST', ok: 'GOOD', bad: 'BAD'}[lv]}</span>`;
-    const ticks = Array.from({length: SD_MAX / 5 + 1}, (_, i) => `<span style="left:${pct(i * 5)}">${i * 5}</span>`).join('');
-    return `<div class="sdg ${s == null ? 'running' : 'lv-' + lv} ${anim ? 'anim' : ''}" style="--p:${s == null ? '0%' : pct(s)}">
+    return `<div class="sdg ${s == null ? 'running' : 'lv-' + lv} ${anim ? 'anim' : max ? 'done' : ''} ${max ? 'max' : ''}" style="--p:${s == null ? 0 : sdPos(s).toFixed(2)}%">
       <div class="sdg-head"><span class="sdg-num" data-to="${s == null ? '' : s.toFixed(1)}">${s == null ? '--.-' : anim ? '0.0' : s.toFixed(1)}</span>
         <span class="sdg-unit mono">STREAMS</span>${stamp}<span class="sdg-cap">${s == null ? t('sdRunning') + '…' : t('sdStreams')}</span></div>
-      <div class="sdg-track"><div class="sdg-fill"></div>
-        <i class="sdg-mk" style="left:${pct(SD_OK)}"></i><i class="sdg-mk best" style="left:${pct(SD_GOOD)}"></i></div>
-      <div class="sdg-scale mono">${ticks}</div></div>`;
+      <div class="sdg-track"><i class="z z-bad"></i><i class="z z-ok"></i><i class="z z-best"></i><div class="sdg-fill"></div><span class="sdg-max mono">MAX</span></div>
+      <div class="sdg-zones mono"><span class="zb">BAD</span><span class="zo">GOOD</span><span class="zg">BEST</span></div>
+      <div class="sdg-scale mono"><span style="left:0">0</span><span style="left:40%">${SD_OK}</span><span style="left:60%">${SD_GOOD}</span><span style="left:100%">${SD_FULL}+</span></div></div>`;
   },
   animateSd(){
     const g = document.querySelector('.sdg.anim'); if (!g) return;

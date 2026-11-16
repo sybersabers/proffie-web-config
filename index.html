@@ -327,12 +327,21 @@
   .sdg-unit{font-size:12px;letter-spacing:.2em;color:var(--muted)}
   .sdg-cap{margin-left:auto;font-weight:700;color:#cfe3ee}
   .sdg-stamp{font-family:var(--disp);font-weight:700;font-size:22px;letter-spacing:.18em;padding:2px 14px;border:2px solid currentColor;color:var(--c);background:color-mix(in srgb,var(--c) 10%,transparent);box-shadow:0 0 14px color-mix(in srgb,var(--c) 35%,transparent)}
-  .sdg-track{position:relative;height:22px;background:repeating-linear-gradient(90deg,rgba(55,226,255,.10) 0 6px,transparent 6px 9px);border:1px solid rgba(55,226,255,.25);clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,0 100%)}
-  .sdg-fill{position:absolute;inset:0 auto 0 0;width:var(--p);background:repeating-linear-gradient(90deg,var(--c) 0 6px,transparent 6px 9px);box-shadow:0 0 14px var(--c);filter:drop-shadow(0 0 6px var(--c))}
+  .sdg-track{position:relative;height:24px;border:1px solid rgba(55,226,255,.25);clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,0 100%)}
+  .sdg-track .z{position:absolute;top:0;bottom:0;background:repeating-linear-gradient(90deg,currentColor 0 6px,transparent 6px 9px);opacity:.14}
+  .z-bad{left:0;width:40%;color:var(--bad)} .z-ok{left:40%;width:20%;color:var(--warn);border-left:1px dashed rgba(255,154,60,.7)} .z-best{left:60%;width:40%;color:var(--accent);border-left:1px dashed rgba(55,226,255,.8)}
+  .sdg-fill{position:absolute;inset:0 auto 0 0;width:var(--p);background:repeating-linear-gradient(90deg,var(--c) 0 6px,transparent 6px 9px);filter:drop-shadow(0 0 6px var(--c))}
   .sdg-fill::after{content:'';position:absolute;right:-2px;top:-4px;bottom:-4px;width:3px;background:#fff;box-shadow:0 0 10px #fff,0 0 20px var(--c)}
-  .sdg-mk{position:absolute;top:-6px;bottom:-6px;width:0;border-left:1px dashed rgba(255,154,60,.8)}
-  .sdg-mk.best{border-left-color:rgba(55,226,255,.9)}
-  .sdg-scale{position:relative;height:16px;margin-top:6px;font-size:10px;color:var(--muted)}
+  .sdg-max{position:absolute;right:16px;top:50%;transform:translateY(-50%);font-size:11px;font-weight:700;letter-spacing:.2em;color:#06131a;background:#fff;padding:1px 6px;opacity:0;box-shadow:0 0 12px var(--c)}
+  .sdg.max.done .sdg-max{opacity:1;transition:opacity .3s .2s}
+  .sdg.max.done .sdg-fill{animation:maxglow 1.6s ease-in-out infinite}
+  .sdg.max.done .sdg-fill::after{display:none}
+  @keyframes maxglow{50%{filter:drop-shadow(0 0 14px var(--c)) brightness(1.25)}}
+  .sdg-zones{position:relative;height:16px;margin-top:6px;font-size:11px;letter-spacing:.18em;font-weight:700}
+  .sdg-zones span{position:absolute;text-align:center;opacity:.55}
+  .zb{left:0;width:40%;color:var(--bad)} .zo{left:40%;width:20%;color:var(--warn)} .zg{left:60%;width:40%;color:var(--accent)}
+  .sdg.lv-bad .zb,.sdg.lv-ok .zo,.sdg.lv-good .zg{opacity:1;text-shadow:0 0 8px currentColor}
+  .sdg-scale{position:relative;height:14px;margin-top:2px;font-size:10px;color:var(--muted)}
   .sdg-scale span{position:absolute;transform:translateX(-50%)}
   .sdg-scale span:first-child{transform:none} .sdg-scale span:last-child{transform:translateX(-100%)}
   .sdg.anim .sdg-fill{width:0;transition:width 1.4s cubic-bezier(.2,.8,.2,1)}
@@ -756,7 +765,9 @@ const recLink = (key, label) => lang === 'ja'
 /** SD チェックの目安（同時に鳴らせる音の数）。仮の値：実測で調整する */
 /* 目安は ProffieBoard v3 ユーザーマニュアル（Dmitry Shtok）p.35 の実測表から。
    推奨は 900 kb/s 以上（≒10 本）、BEST 欄は 12〜15 本、BAD 欄は 8 本前後 */
-const SD_GOOD = 15, SD_OK = 10, SD_MAX = 40;
+const SD_GOOD = 15, SD_OK = 10, SD_FULL = 25;
+/** ゲージ上の位置（%）。BAD 0〜10 を 40%、GOOD 10〜15 を 20%、BEST 15〜25 を 40%。25 以上は満タン */
+const sdPos = v => v >= SD_FULL ? 100 : v >= SD_GOOD ? 60 + (v - SD_GOOD) / (SD_FULL - SD_GOOD) * 40 : v >= SD_OK ? 40 + (v - SD_OK) / (SD_GOOD - SD_OK) * 20 : Math.max(0, v) / SD_OK * 40;
 const VOL_SAFE = 1500, VOL_HARD = 3000;
 function volColor(v){
   // 色は上限ではなく音量の値で決める：〜1000 通常、1500 でオレンジ、3000 で赤
@@ -2126,18 +2137,16 @@ const App = {
       </div></section>`;
     return h;
   },
-  /** 横ゲージ。s=null は計測中。目盛りは 0〜SD_MAX */
+  /** 横ゲージ（BAD / GOOD / BEST の区間式）。s=null は計測中 */
   sdGauge(s, lv){
-    const pct = v => (Math.max(0, Math.min(SD_MAX, v)) / SD_MAX * 100).toFixed(2) + '%';
-    const anim = s != null && this.sdAnim;
+    const anim = s != null && this.sdAnim, max = s != null && s >= SD_FULL;
     const stamp = s == null ? '' : `<span class="sdg-stamp sd-${lv}">${{good: 'BEST', ok: 'GOOD', bad: 'BAD'}[lv]}</span>`;
-    const ticks = Array.from({length: SD_MAX / 5 + 1}, (_, i) => `<span style="left:${pct(i * 5)}">${i * 5}</span>`).join('');
-    return `<div class="sdg ${s == null ? 'running' : 'lv-' + lv} ${anim ? 'anim' : ''}" style="--p:${s == null ? '0%' : pct(s)}">
+    return `<div class="sdg ${s == null ? 'running' : 'lv-' + lv} ${anim ? 'anim' : max ? 'done' : ''} ${max ? 'max' : ''}" style="--p:${s == null ? 0 : sdPos(s).toFixed(2)}%">
       <div class="sdg-head"><span class="sdg-num" data-to="${s == null ? '' : s.toFixed(1)}">${s == null ? '--.-' : anim ? '0.0' : s.toFixed(1)}</span>
         <span class="sdg-unit mono">STREAMS</span>${stamp}<span class="sdg-cap">${s == null ? t('sdRunning') + '…' : t('sdStreams')}</span></div>
-      <div class="sdg-track"><div class="sdg-fill"></div>
-        <i class="sdg-mk" style="left:${pct(SD_OK)}"></i><i class="sdg-mk best" style="left:${pct(SD_GOOD)}"></i></div>
-      <div class="sdg-scale mono">${ticks}</div></div>`;
+      <div class="sdg-track"><i class="z z-bad"></i><i class="z z-ok"></i><i class="z z-best"></i><div class="sdg-fill"></div><span class="sdg-max mono">MAX</span></div>
+      <div class="sdg-zones mono"><span class="zb">BAD</span><span class="zo">GOOD</span><span class="zg">BEST</span></div>
+      <div class="sdg-scale mono"><span style="left:0">0</span><span style="left:40%">${SD_OK}</span><span style="left:60%">${SD_GOOD}</span><span style="left:100%">${SD_FULL}+</span></div></div>`;
   },
   animateSd(){
     const g = document.querySelector('.sdg.anim'); if (!g) return;
