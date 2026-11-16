@@ -285,22 +285,27 @@
   /* 操作表 */
   .sheet-tools{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
   .sheet-tools .sp{flex:1}
-  .sheet{background:#fff;color:#111;border-radius:8px;padding:22px 26px;margin-bottom:16px;font-size:12.5px;line-height:1.45}
-  .sh-head{display:flex;justify-content:space-between;align-items:baseline;border-bottom:2px solid #111;padding-bottom:6px;margin-bottom:8px;gap:10px;flex-wrap:wrap}
-  .sh-head b{font-size:18px}
-  .sh-meta{color:#555;font-size:12px}
-  .sh-legend{color:#444;margin:0 0 8px;font-size:11.5px}
-  .sh-warn{background:#fff4d6;border:1px solid #e6c46a;padding:5px 8px;border-radius:4px;margin:0 0 8px}
-  .sh-cols{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}
+  .sheet{position:relative;background:linear-gradient(180deg,rgba(13,30,42,.92),rgba(7,17,25,.94));color:#cfe3ee;border:1px solid rgba(55,226,255,.22);padding:22px 26px 24px;margin-bottom:16px;font-size:12.5px;line-height:1.5;
+    clip-path:polygon(0 0,calc(100% - 18px) 0,100% 18px,100% 100%,18px 100%,0 calc(100% - 18px))}
+  .sh-head{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid rgba(55,226,255,.35);padding-bottom:8px;margin-bottom:10px;gap:10px;flex-wrap:wrap}
+  .sh-head b{font-family:var(--disp);font-size:18px;letter-spacing:.06em;color:#fff}
+  .sh-head > div:first-child{color:var(--accent);font-family:var(--mono);font-size:13px}
+  .sh-meta{color:var(--muted);font-size:11.5px;font-family:var(--mono);letter-spacing:.04em}
+  .sh-legend{color:var(--muted);margin:0 0 12px;font-size:11.5px}
+  .sh-warn{background:rgba(255,154,60,.08);border:1px solid rgba(255,154,60,.45);color:#ffd2a6;padding:6px 10px;margin:0 0 10px}
+  .sh-cols{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start}
   @media (max-width:820px){.sh-cols{grid-template-columns:1fr}}
-  table.ctl{width:100%;border-collapse:collapse;font-size:12px}
+  table.ctl{width:100%;border-collapse:collapse;font-size:12.5px}
   .sheet th{font-family:inherit;letter-spacing:0}
-  table.ctl th{background:#1f2a37;color:#fff;text-align:left;padding:5px 8px;font-size:12.5px}
-  table.ctl td{border-bottom:1px solid #ddd;padding:4px 8px;vertical-align:top;color:#111}
-  table.ctl td:first-child{font-weight:600;white-space:nowrap;width:38%}
-  table.ctl small{color:#666}
-  .sh-battle{margin-top:12px}
-  .sh-battle p{margin:4px 0 0;color:#444;font-size:11.5px}
+  table.ctl th{background:linear-gradient(90deg,rgba(55,226,255,.16),rgba(55,226,255,.03));color:#9ff1ff;text-align:left;padding:7px 10px;font-family:var(--disp);font-size:13px;letter-spacing:.06em;border-left:3px solid var(--accent)}
+  table.ctl td{border-bottom:1px solid rgba(55,226,255,.10);padding:6px 10px;vertical-align:top;color:#dbe9f1}
+  table.ctl tr:hover td{background:rgba(55,226,255,.04)}
+  table.ctl td:first-child{font-weight:700;white-space:nowrap;width:38%;color:#fff}
+  table.ctl small{color:var(--muted)}
+  .sheet kbd{display:inline-block;font:700 10.5px/1.5 var(--mono);letter-spacing:.06em;padding:0 5px;margin:0 1px;color:var(--accent);background:rgba(55,226,255,.08);border:1px solid rgba(55,226,255,.45)}
+  .sh-battle{margin-top:18px}
+  .sh-battle table.ctl th{color:#ffc58f;border-left-color:var(--warn);background:linear-gradient(90deg,rgba(255,154,60,.16),rgba(255,154,60,.03))}
+  .sh-battle p{margin:6px 0 0;color:var(--muted);font-size:11.5px}
   .plist-t td:first-child{width:28px}
   .plist-t td.sws{white-space:nowrap}
   .sheet .sw{box-shadow:none;border:1px solid #999;width:13px;height:13px;margin-right:2px}
@@ -310,7 +315,13 @@
     header,footer,.board,.tabs,.sheet-tools,.notice,.banner,.progress,.toast,#status,#boot{display:none !important}
     .card,.card::before{clip-path:none !important;background:none !important}
     main{padding:0;max-width:none}
-    .sheet{border-radius:0;padding:0;margin:0}
+    .sheet{clip-path:none;background:#fff !important;color:#111;border:none;padding:0;margin:0}
+    .sh-head{border-bottom:2px solid #111} .sh-head b,.sh-head > div:first-child{color:#111} .sh-meta,.sh-legend,.sh-battle p{color:#444}
+    .sh-warn{background:#fff4d6;border:1px solid #e6c46a;color:#111}
+    table.ctl th,.sh-battle table.ctl th{background:#1f2a37 !important;color:#fff;border-left:none}
+    table.ctl td{border-bottom:1px solid #ddd;color:#111} table.ctl td:first-child{color:#111} table.ctl small{color:#666}
+    .sheet kbd{color:#111;background:none;border-color:#888}
+    .sh-cols{grid-template-columns:1fr 1fr;gap:10px} .sheet{font-size:10.5px} table.ctl{font-size:10.5px} table.ctl th{font-size:11px;padding:4px 8px} table.ctl td{padding:3px 6px} table.ctl tr:hover td{background:none} table.ctl td:first-child{white-space:normal} table.ctl small{font-size:9.5px}
     .sheet2{break-before:page}
     *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
   }
@@ -2139,7 +2150,7 @@ const App = {
     const g = d.gestures || (o && o.gestures) || {swingon: 1, twistoff: 1, forcepush: 1, gestureon: 1};
     const J = lang === 'ja', k = buttons === 1 ? 'b1' : 'b2';
     const tbl = (list, title) => `<table class="ctl"><tr><th colspan="2">${title}</th></tr>${CTRL.rows(list, g, defs).map(r =>
-      `<tr><td>${J ? r[0] : r[1]}</td><td>${J ? r[2] : r[3]}</td></tr>`).join('')}</table>`;
+      `<tr><td>${J ? r[0] : r[1]}</td><td>${(J ? r[2] : r[3]).replace(/\b(PWR|AUX)\b/g, '<kbd>$1</kbd>')}</td></tr>`).join('')}</table>`;
     let h = `<div class="sheet-tools"><button class="btn primary" id="btnPrint">${t('printBtn')}</button>
       <span class="hint">${o ? t('srcCfg', {f: esc(o.name)}) : t('srcStd')}${d.gestures ? P().s : ''}${d.gestures ? t('srcBoard') : ''}</span>
       ${this.advanced ? `<span class="sp"></span><button class="btn small" id="btnCfg">${t('loadCfg')}</button><input type="file" id="cfgFile" accept=".h,.txt" hidden>
