@@ -177,6 +177,75 @@ const Proffie = {
 /* =====================================================================
  * 返答の解析
  * ===================================================================== */
+/** config（.h）からプリセットごとのエフェクトコードを取り出す */
+const CFG = {
+  /** コメントを消す（文字列の中の // は残す） */
+  stripComments(t){
+    let o = '', i = 0;
+    while (i < t.length) {
+      const c = t[i], n = t[i + 1];
+      if (c === '"' || c === "'") { let j = i + 1; while (j < t.length && t[j] !== c) j += t[j] === '\\' ? 2 : 1; o += t.slice(i, j + 1); i = j + 1; }
+      else if (c === '/' && n === '/') { while (i < t.length && t[i] !== '\n') i++; }
+      else if (c === '/' && n === '*') { const j = t.indexOf('*/', i + 2); i = j < 0 ? t.length : j + 2; }
+      else { o += c; i++; }
+    }
+    return o;
+  },
+  /** 深さ 0 のカンマで分ける（() <> {} [] と文字列を考慮） */
+  split(s){
+    const out = []; let d = 0, cur = '', q = null;
+    for (let i = 0; i < s.length; i++) {
+      const c = s[i];
+      if (q) { cur += c; if (c === '\\') { cur += s[++i] || ''; } else if (c === q) q = null; continue; }
+      if (c === '"') { q = c; cur += c; continue; }
+      if ('(<{['.includes(c)) d++; else if (')>}]'.includes(c)) d--;
+      if (c === ',' && d === 0) { out.push(cur.trim()); cur = ''; } else cur += c;
+    }
+    if (cur.trim()) out.push(cur.trim());
+    return out;
+  },
+  /** 開き括弧 i に対応する閉じ括弧の位置 */
+  match(t, i){
+    const open = t[i], close = {'{': '}', '(': ')', '<': '>', '[': ']'}[open]; let d = 0, q = null;
+    for (let j = i; j < t.length; j++) {
+      const c = t[j];
+      if (q) { if (c === '\\') j++; else if (c === q) q = null; continue; }
+      if (c === '"') { q = c; continue; }
+      if (c === open) d++; else if (c === close && --d === 0) return j;
+    }
+    return -1;
+  },
+  unq: s => /^".*"$/s.test(s) ? s.slice(1, -1) : s,
+  parse(text){
+    const t = this.stripComments(text).replace(/^[ \t]*#.*$/gm, '');
+    const arrays = [], usings = {};
+    for (const m of t.matchAll(/using\s+(\w+)\s*=\s*([^;]+);/g)) usings[m[1]] = m[2].trim();
+    const re = /Preset\s+(\w+)\s*\[\s*\]\s*=\s*\{/g; let m;
+    while ((m = re.exec(t))) {
+      const st = m.index + m[0].length - 1, en = this.match(t, st); if (en < 0) break;
+      const body = t.slice(st + 1, en), presets = [];
+      for (let i = 0; i < body.length; i++) {
+        if (body[i] !== '{') continue;
+        const e = this.match(body, i); if (e < 0) break;
+        const f = this.split(body.slice(i + 1, e));
+        if (f.length >= 3) {
+          const last = f[f.length - 1], hasName = /^"/.test(last);
+          presets.push({font: this.unq(f[0]), track: this.unq(f[1]), styles: f.slice(2, hasName ? -1 : undefined), name: hasName ? this.unq(last) : ''});
+        }
+        i = e;
+      }
+      arrays.push({name: m[1], presets});
+      re.lastIndex = en;
+    }
+    return {arrays, usings};
+  },
+  /** StylePtr<Name>() の Name が using で定義されていれば、その中身 */
+  alias(code, usings){
+    const m = /^Style\w*Ptr\s*<\s*(\w+)\s*>\s*\(\s*\)$/.exec(code.replace(/\s+/g, ' ').trim());
+    return m && usings[m[1]] ? {name: m[1], code: usings[m[1]]} : null;
+  },
+};
+
 const PP = {
   unescape(v){ return v.replace(/\\(.)/g, (m, c) => c === 'n' ? '\n' : c === 't' ? '\t' : c); },
   presets(text){

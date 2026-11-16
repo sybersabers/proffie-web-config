@@ -320,6 +320,12 @@
   .presented{margin:0;font-size:10.5px;color:#6f93a8;text-align:center}
   .presented a{color:#9fc3d6;text-decoration:none;letter-spacing:.12em}
   .presented a:hover{color:var(--accent)}
+  .fxcode-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:-4px 0 12px}
+  .fxcode-bar select{max-width:220px}
+  .fxsrc{margin:4px 0 6px}
+  .fxcode{position:relative;margin-bottom:8px}
+  .fxpre{margin:0;padding:10px 12px;padding-right:70px;max-height:220px;overflow:auto;white-space:pre-wrap;word-break:break-all;font:12px/1.5 var(--mono);color:#cfe3ee;background:rgba(0,0,0,.35);border:1px solid rgba(55,226,255,.18)}
+  .fxcopy{position:absolute;top:6px;right:6px}
   .sdg{--c:var(--accent);margin:6px 0 22px}
   .sdg.lv-ok{--c:var(--warn)} .sdg.lv-bad{--c:var(--bad)}
   .sdg-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:10px}
@@ -519,6 +525,10 @@ ja: {
   legend: 'クリック＝短く押す／ロングクリック＝約1秒押して離す／ホールド＝押したまま',
   showMoreBk: '古いものを表示（{n} 件）', notFett: 'この操作表は Fett263 用です（このセーバー：{p}）', gestOff: '現在ジェスチャーは OFF です（「ジェスチャー ON／OFF」の操作で ON にするとスイングオンなどが使えます）',
   cfgBad: 'config から define を読み取れませんでした',
+  fxCodeLoad: 'エフェクトコードを見る（config ファイルを読み込む）', fxCodeFile: 'config：{f}', fxCodeClose: '閉じる', fxCode: 'エフェクトコード',
+  fxCodeArr: 'プリセット一覧', fxCodeNone: 'このファイルにはプリセット（Preset presets[]）が見つかりません', fxCodeMiss: 'config の中に該当するコードが見つかりません（{n} 番目）',
+  fxCodeWarn: 'セーバーの config（{c}）と名前が違います。別の config の可能性があります', fxCodeAlias: '{n} の中身', fxCodeStr: 'config ではなく、文字列で指定されたスタイルです',
+  copy: 'コピー', copiedOk: 'コピーしました',
   waitingSd: 'SDカードの準備中', waitingSdN: 'SDカードの準備を待っています（{s} 秒・最大2分）', reloadingFont: 'フォントを読み込み直しています', sdBusy: 'SDカードを使えません',
   sdBusyBody: 'セーバーが SD カードを読めない状態です。\n1. エクスプローラー（Finder）で SD カードのドライブを開いていたら閉じる\n2. それでも直らなければ、USB を抜いてセーバーの電源を切り、入れ直してから「セーバーに接続」',
   trouble4: '音が鳴らない・「フォントが見つからない」→ SD カードのドライブを閉じて「読み込み直す」',
@@ -644,6 +654,10 @@ en: {
   legend: 'Click = short press / Long click = hold ~1 s and release / Hold = keep pressed',
   showMoreBk: 'Show older ({n})', notFett: 'This sheet is for the Fett263 prop (this saber: {p})', gestOff: 'Gestures are currently OFF (use "Gesture Sleep" to enable Swing On etc.)',
   cfgBad: 'Could not read defines from the config',
+  fxCodeLoad: 'View effect code (load config file)', fxCodeFile: 'config: {f}', fxCodeClose: 'Close', fxCode: 'Effect code',
+  fxCodeArr: 'Preset list', fxCodeNone: 'No presets (Preset presets[]) found in this file', fxCodeMiss: 'Matching code not found in the config (#{n})',
+  fxCodeWarn: 'Name differs from the saber\'s config ({c}). It may be a different config.', fxCodeAlias: 'Definition of {n}', fxCodeStr: 'This is a string style, not code from the config.',
+  copy: 'Copy', copiedOk: 'Copied',
   waitingSd: 'Preparing the SD card', waitingSdN: 'Waiting for the SD card ({s} s, up to 2 min)', reloadingFont: 'Reloading the sound font', sdBusy: 'SD card not available',
   sdBusyBody: 'The saber cannot read its SD card.\n1. Close the SD card drive in Explorer / Finder if it is open\n2. If that does not help, unplug USB, power the saber off and on, then click "Connect saber"',
   trouble4: 'No sound / "font not found" → close the SD card drive in Explorer and click "Reload"',
@@ -893,6 +907,75 @@ const Proffie = {
 /* =====================================================================
  * 返答の解析
  * ===================================================================== */
+/** config（.h）からプリセットごとのエフェクトコードを取り出す */
+const CFG = {
+  /** コメントを消す（文字列の中の // は残す） */
+  stripComments(t){
+    let o = '', i = 0;
+    while (i < t.length) {
+      const c = t[i], n = t[i + 1];
+      if (c === '"' || c === "'") { let j = i + 1; while (j < t.length && t[j] !== c) j += t[j] === '\\' ? 2 : 1; o += t.slice(i, j + 1); i = j + 1; }
+      else if (c === '/' && n === '/') { while (i < t.length && t[i] !== '\n') i++; }
+      else if (c === '/' && n === '*') { const j = t.indexOf('*/', i + 2); i = j < 0 ? t.length : j + 2; }
+      else { o += c; i++; }
+    }
+    return o;
+  },
+  /** 深さ 0 のカンマで分ける（() <> {} [] と文字列を考慮） */
+  split(s){
+    const out = []; let d = 0, cur = '', q = null;
+    for (let i = 0; i < s.length; i++) {
+      const c = s[i];
+      if (q) { cur += c; if (c === '\\') { cur += s[++i] || ''; } else if (c === q) q = null; continue; }
+      if (c === '"') { q = c; cur += c; continue; }
+      if ('(<{['.includes(c)) d++; else if (')>}]'.includes(c)) d--;
+      if (c === ',' && d === 0) { out.push(cur.trim()); cur = ''; } else cur += c;
+    }
+    if (cur.trim()) out.push(cur.trim());
+    return out;
+  },
+  /** 開き括弧 i に対応する閉じ括弧の位置 */
+  match(t, i){
+    const open = t[i], close = {'{': '}', '(': ')', '<': '>', '[': ']'}[open]; let d = 0, q = null;
+    for (let j = i; j < t.length; j++) {
+      const c = t[j];
+      if (q) { if (c === '\\') j++; else if (c === q) q = null; continue; }
+      if (c === '"') { q = c; continue; }
+      if (c === open) d++; else if (c === close && --d === 0) return j;
+    }
+    return -1;
+  },
+  unq: s => /^".*"$/s.test(s) ? s.slice(1, -1) : s,
+  parse(text){
+    const t = this.stripComments(text).replace(/^[ \t]*#.*$/gm, '');
+    const arrays = [], usings = {};
+    for (const m of t.matchAll(/using\s+(\w+)\s*=\s*([^;]+);/g)) usings[m[1]] = m[2].trim();
+    const re = /Preset\s+(\w+)\s*\[\s*\]\s*=\s*\{/g; let m;
+    while ((m = re.exec(t))) {
+      const st = m.index + m[0].length - 1, en = this.match(t, st); if (en < 0) break;
+      const body = t.slice(st + 1, en), presets = [];
+      for (let i = 0; i < body.length; i++) {
+        if (body[i] !== '{') continue;
+        const e = this.match(body, i); if (e < 0) break;
+        const f = this.split(body.slice(i + 1, e));
+        if (f.length >= 3) {
+          const last = f[f.length - 1], hasName = /^"/.test(last);
+          presets.push({font: this.unq(f[0]), track: this.unq(f[1]), styles: f.slice(2, hasName ? -1 : undefined), name: hasName ? this.unq(last) : ''});
+        }
+        i = e;
+      }
+      arrays.push({name: m[1], presets});
+      re.lastIndex = en;
+    }
+    return {arrays, usings};
+  },
+  /** StylePtr<Name>() の Name が using で定義されていれば、その中身 */
+  alias(code, usings){
+    const m = /^Style\w*Ptr\s*<\s*(\w+)\s*>\s*\(\s*\)$/.exec(code.replace(/\s+/g, ' ').trim());
+    return m && usings[m[1]] ? {name: m[1], code: usings[m[1]]} : null;
+  },
+};
+
 const PP = {
   unescape(v){ return v.replace(/\\(.)/g, (m, c) => c === 'n' ? '\n' : c === 't' ? '\t' : c); },
   presets(text){
@@ -1222,7 +1305,7 @@ const SHOW_FX_SELECT = false;
  * ===================================================================== */
 const App = {
   data: null, raw: [], busy: false, tab: 'presets', sel: 0, checked: new Set(), descCache: {},
-  openDetails: new Set(), cfgOverride: null, sheetPresets: true, backedUp: false, advanced: false, form: null, dirty: false, linkBlades: true, volUnlocked: false, batTimer: null, live: false,
+  openDetails: new Set(), cfgOverride: null, cfgCode: null, cfgArr: 0, sheetPresets: true, backedUp: false, advanced: false, form: null, dirty: false, linkBlades: true, volUnlocked: false, batTimer: null, live: false,
 
   /* ---------------- 起動 ---------------- */
   init(){
@@ -1985,7 +2068,7 @@ const App = {
           ${trackOk ? '' : `<small class="warn">${t('notOnSd')}</small>`}<small class="hint" id="fTrackNote">${this.trackNote(f.font)}</small></label>
         ${this.advanced ? `<label>${t('variation')}<input type="number" id="fVar" value="${esc(f.variation)}" step="1"><small>${t('variationHint')}</small></label>` : ''}
       </div>
-      <h3>${t('bladeColors')}</h3>`;
+      <h3>${t('bladeColors')}</h3>${this.fxCodeBar()}`;
     if (p.styles.length > 1) h += `<label class="chk"><input type="checkbox" id="fLink" ${this.linkBlades ? 'checked' : ''}> ${t('linkBlades')}</label>`;
     p.styles.forEach((s, b) => {
       const args = this.argsOf(p, b), main = args.find(a => a.no === 1 && a.type === 'COLOR');
@@ -2003,6 +2086,7 @@ const App = {
       if (fx.length) h += `<details class="fx" data-key="fx${b}"${op('fx' + b)}><summary>${t('effectColors')}</summary>${fx.map(a => this.colorRow(b, a, (COLOR_SHORT[lang] || COLOR_SHORT.ja)[a.no] || AN[a.no] || `#${a.no}`, false)).join('')}</details>`;
       if (this.advanced && ints.length) h += `<details class="fx" data-key="int${b}"${op('int' + b)}><summary>${t('otherArgs')}</summary><div class="ints">${ints.map(a =>
         `<label>${esc(AN[a.no] || '#' + a.no)}<input type="number" class="fInt" data-b="${b}" data-k="${a.no}" value="${esc(this.effective(b, a.no))}"></label>`).join('')}</div></details>`;
+      h += this.fxCodeHtml(s, b);
       if (this.advanced) h += `<details class="fx" data-key="raw${b}"${op('raw' + b)}><summary>${t('rawStyle')}</summary><textarea class="fRaw" data-b="${b}">${esc(f.raw[b])}</textarea></details>`;
       h += '</div>';
     });
@@ -2010,6 +2094,35 @@ const App = {
       <button class="btn" id="btnRevert" ${this.dirty ? '' : 'disabled'}>${t('revert')}</button>
       <button class="btn primary" id="btnSave" ${this.dirty ? '' : 'disabled'}>${t('saveChanges')}</button></div>`;
     return h;
+  },
+  fxCodeBar(){
+    const c = this.cfgCode, d = this.data;
+    if (!c) return `<div class="fxcode-bar"><button class="btn small" id="btnFxCfg">${t('fxCodeLoad')}</button><input type="file" id="fxCfgFile" accept=".h,.txt" hidden></div>`;
+    const base = s => (s || '').split('/').pop().replace(/\.h$/i, '').toLowerCase();
+    let h = `<div class="fxcode-bar"><span class="hint mono">${esc(t('fxCodeFile', {f: c.name}))}</span>`;
+    if (c.arrays.length > 1) h += `<select id="fxArr">${c.arrays.map((a, i) => `<option value="${i}"${i === this.cfgArr ? ' selected' : ''}>${esc(a.name)}（${a.presets.length}）</option>`).join('')}</select>`;
+    h += `<button class="btn small" id="btnFxCfgClr">${t('fxCodeClose')}</button></div>`;
+    if (!c.arrays.length) h += `<p class="warn">${t('fxCodeNone')}</p>`;
+    else if (d.board.config && base(c.name) !== base(d.board.config)) h += `<p class="warn">${t('fxCodeWarn', {c: esc(d.board.config.split('/').pop())})}</p>`;
+    return h;
+  },
+  fxCodeHtml(s, b){
+    const c = this.cfgCode; if (!c || !c.arrays.length) return '';
+    const st = PP.style(s), arr = c.arrays[this.cfgArr] || c.arrays[0];
+    const k = 'code' + b, op = this.openDetails.has(k) ? ' open' : '';
+    let body;
+    if (!st.builtin) body = `<p class="hint">${t('fxCodeStr')}</p><pre class="fxpre">${esc(s)}</pre>`;
+    else {
+      const p = arr.presets[st.builtin.preset], code = p && p.styles[st.builtin.blade - 1];
+      if (!code) body = `<p class="warn">${t('fxCodeMiss', {n: st.builtin.preset + 1})}</p>`;
+      else {
+        const al = CFG.alias(code, c.usings);
+        body = `<div class="fxsrc hint mono">${esc(arr.name)}[${st.builtin.preset}]${p.name ? ' · ' + esc(p.name) : ''} · ${esc(t('blade', {n: st.builtin.blade}))}</div>
+          <div class="fxcode"><pre class="fxpre">${esc(code)}</pre><button class="btn small fxcopy">${t('copy')}</button></div>
+          ${al ? `<div class="hint">${esc(t('fxCodeAlias', {n: al.name}))}</div><div class="fxcode"><pre class="fxpre">${esc(al.code)}</pre><button class="btn small fxcopy">${t('copy')}</button></div>` : ''}`;
+      }
+    }
+    return `<details class="fx" data-key="${k}"${op}><summary>${t('fxCode')}</summary>${body}</details>`;
   },
   colorRow(b, a, label, big){
     const v = this.effective(b, a.no), isDef = this.form.args[b][a.no] === '~' || v === a.def;
@@ -2228,6 +2341,20 @@ const App = {
       const min = +el.min, max = +el.max, p = Math.max(0, Math.min(1, ((+el.value || 0) - min) / (max - min)));
       r.querySelector('.rbar').setAttribute('stroke-dasharray', `${(283 * p).toFixed(1)} 377`); r.querySelector('.rv').textContent = el.dataset.dec ? (+el.value || 0).toFixed(+el.dataset.dec) : el.value;
     }));
+    if (this.tab === 'presets') {
+      on('btnFxCfg', () => $('fxCfgFile').click());
+      on('fxCfgFile', async e => {
+        const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+        this.cfgCode = {name: f.name, ...CFG.parse(await f.text())}; this.cfgArr = 0;
+        for (let b = 0; b < 4; b++) this.openDetails.add('code' + b);
+        this.render();
+      }, 'onchange');
+      on('btnFxCfgClr', () => { this.cfgCode = null; this.render(); });
+      on('fxArr', e => { this.cfgArr = +e.target.value; this.render(); }, 'onchange');
+      document.querySelectorAll('.fxcopy').forEach(btn => btn.addEventListener('click', async () => {
+        try { await navigator.clipboard.writeText(btn.previousElementSibling.textContent); toast(t('copiedOk')); } catch { toast(t('error')); }
+      }));
+    }
     if (this.tab === 'controls') {
       on('btnPrint', () => window.print());
       on('btnCfg', () => $('cfgFile').click());

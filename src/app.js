@@ -6,7 +6,7 @@ const SHOW_FX_SELECT = false;
  * ===================================================================== */
 const App = {
   data: null, raw: [], busy: false, tab: 'presets', sel: 0, checked: new Set(), descCache: {},
-  openDetails: new Set(), cfgOverride: null, sheetPresets: true, backedUp: false, advanced: false, form: null, dirty: false, linkBlades: true, volUnlocked: false, batTimer: null, live: false,
+  openDetails: new Set(), cfgOverride: null, cfgCode: null, cfgArr: 0, sheetPresets: true, backedUp: false, advanced: false, form: null, dirty: false, linkBlades: true, volUnlocked: false, batTimer: null, live: false,
 
   /* ---------------- 起動 ---------------- */
   init(){
@@ -769,7 +769,7 @@ const App = {
           ${trackOk ? '' : `<small class="warn">${t('notOnSd')}</small>`}<small class="hint" id="fTrackNote">${this.trackNote(f.font)}</small></label>
         ${this.advanced ? `<label>${t('variation')}<input type="number" id="fVar" value="${esc(f.variation)}" step="1"><small>${t('variationHint')}</small></label>` : ''}
       </div>
-      <h3>${t('bladeColors')}</h3>`;
+      <h3>${t('bladeColors')}</h3>${this.fxCodeBar()}`;
     if (p.styles.length > 1) h += `<label class="chk"><input type="checkbox" id="fLink" ${this.linkBlades ? 'checked' : ''}> ${t('linkBlades')}</label>`;
     p.styles.forEach((s, b) => {
       const args = this.argsOf(p, b), main = args.find(a => a.no === 1 && a.type === 'COLOR');
@@ -787,6 +787,7 @@ const App = {
       if (fx.length) h += `<details class="fx" data-key="fx${b}"${op('fx' + b)}><summary>${t('effectColors')}</summary>${fx.map(a => this.colorRow(b, a, (COLOR_SHORT[lang] || COLOR_SHORT.ja)[a.no] || AN[a.no] || `#${a.no}`, false)).join('')}</details>`;
       if (this.advanced && ints.length) h += `<details class="fx" data-key="int${b}"${op('int' + b)}><summary>${t('otherArgs')}</summary><div class="ints">${ints.map(a =>
         `<label>${esc(AN[a.no] || '#' + a.no)}<input type="number" class="fInt" data-b="${b}" data-k="${a.no}" value="${esc(this.effective(b, a.no))}"></label>`).join('')}</div></details>`;
+      h += this.fxCodeHtml(s, b);
       if (this.advanced) h += `<details class="fx" data-key="raw${b}"${op('raw' + b)}><summary>${t('rawStyle')}</summary><textarea class="fRaw" data-b="${b}">${esc(f.raw[b])}</textarea></details>`;
       h += '</div>';
     });
@@ -794,6 +795,35 @@ const App = {
       <button class="btn" id="btnRevert" ${this.dirty ? '' : 'disabled'}>${t('revert')}</button>
       <button class="btn primary" id="btnSave" ${this.dirty ? '' : 'disabled'}>${t('saveChanges')}</button></div>`;
     return h;
+  },
+  fxCodeBar(){
+    const c = this.cfgCode, d = this.data;
+    if (!c) return `<div class="fxcode-bar"><button class="btn small" id="btnFxCfg">${t('fxCodeLoad')}</button><input type="file" id="fxCfgFile" accept=".h,.txt" hidden></div>`;
+    const base = s => (s || '').split('/').pop().replace(/\.h$/i, '').toLowerCase();
+    let h = `<div class="fxcode-bar"><span class="hint mono">${esc(t('fxCodeFile', {f: c.name}))}</span>`;
+    if (c.arrays.length > 1) h += `<select id="fxArr">${c.arrays.map((a, i) => `<option value="${i}"${i === this.cfgArr ? ' selected' : ''}>${esc(a.name)}（${a.presets.length}）</option>`).join('')}</select>`;
+    h += `<button class="btn small" id="btnFxCfgClr">${t('fxCodeClose')}</button></div>`;
+    if (!c.arrays.length) h += `<p class="warn">${t('fxCodeNone')}</p>`;
+    else if (d.board.config && base(c.name) !== base(d.board.config)) h += `<p class="warn">${t('fxCodeWarn', {c: esc(d.board.config.split('/').pop())})}</p>`;
+    return h;
+  },
+  fxCodeHtml(s, b){
+    const c = this.cfgCode; if (!c || !c.arrays.length) return '';
+    const st = PP.style(s), arr = c.arrays[this.cfgArr] || c.arrays[0];
+    const k = 'code' + b, op = this.openDetails.has(k) ? ' open' : '';
+    let body;
+    if (!st.builtin) body = `<p class="hint">${t('fxCodeStr')}</p><pre class="fxpre">${esc(s)}</pre>`;
+    else {
+      const p = arr.presets[st.builtin.preset], code = p && p.styles[st.builtin.blade - 1];
+      if (!code) body = `<p class="warn">${t('fxCodeMiss', {n: st.builtin.preset + 1})}</p>`;
+      else {
+        const al = CFG.alias(code, c.usings);
+        body = `<div class="fxsrc hint mono">${esc(arr.name)}[${st.builtin.preset}]${p.name ? ' · ' + esc(p.name) : ''} · ${esc(t('blade', {n: st.builtin.blade}))}</div>
+          <div class="fxcode"><pre class="fxpre">${esc(code)}</pre><button class="btn small fxcopy">${t('copy')}</button></div>
+          ${al ? `<div class="hint">${esc(t('fxCodeAlias', {n: al.name}))}</div><div class="fxcode"><pre class="fxpre">${esc(al.code)}</pre><button class="btn small fxcopy">${t('copy')}</button></div>` : ''}`;
+      }
+    }
+    return `<details class="fx" data-key="${k}"${op}><summary>${t('fxCode')}</summary>${body}</details>`;
   },
   colorRow(b, a, label, big){
     const v = this.effective(b, a.no), isDef = this.form.args[b][a.no] === '~' || v === a.def;
@@ -1012,6 +1042,20 @@ const App = {
       const min = +el.min, max = +el.max, p = Math.max(0, Math.min(1, ((+el.value || 0) - min) / (max - min)));
       r.querySelector('.rbar').setAttribute('stroke-dasharray', `${(283 * p).toFixed(1)} 377`); r.querySelector('.rv').textContent = el.dataset.dec ? (+el.value || 0).toFixed(+el.dataset.dec) : el.value;
     }));
+    if (this.tab === 'presets') {
+      on('btnFxCfg', () => $('fxCfgFile').click());
+      on('fxCfgFile', async e => {
+        const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+        this.cfgCode = {name: f.name, ...CFG.parse(await f.text())}; this.cfgArr = 0;
+        for (let b = 0; b < 4; b++) this.openDetails.add('code' + b);
+        this.render();
+      }, 'onchange');
+      on('btnFxCfgClr', () => { this.cfgCode = null; this.render(); });
+      on('fxArr', e => { this.cfgArr = +e.target.value; this.render(); }, 'onchange');
+      document.querySelectorAll('.fxcopy').forEach(btn => btn.addEventListener('click', async () => {
+        try { await navigator.clipboard.writeText(btn.previousElementSibling.textContent); toast(t('copiedOk')); } catch { toast(t('error')); }
+      }));
+    }
     if (this.tab === 'controls') {
       on('btnPrint', () => window.print());
       on('btnCfg', () => $('cfgFile').click());
