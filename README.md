@@ -3,7 +3,7 @@
 Proffieboard（ProffieOS）のセーバー設定を、ブラウザから USB で読み書きするツールです。Arduino は不要です。
 A browser tool to read and change Proffieboard (ProffieOS) saber settings over USB — no Arduino needed.
 
-**▶ https://（公開後の URL をここに）**
+**▶ https://webconfig.sybersabers.com/**
 
 - 対応：パソコン版の Chrome / Edge（Web Serial を使います）
 - 動作確認：ProffieOS 8.10 / Fett263 prop
