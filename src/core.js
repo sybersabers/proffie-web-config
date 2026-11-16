@@ -47,7 +47,9 @@ const recLink = (key, label) => lang === 'ja'
   ? `<a class="reclink" href="${REC[key]}" target="_blank" rel="noopener${AFFILIATE ? ' sponsored' : ''}">${label}${AFFILIATE ? '<span class="pr">PR</span>' : ''}</a>`
   : '';
 /** SD チェックの目安（同時に鳴らせる音の数）。仮の値：実測で調整する */
-const SD_GOOD = 8, SD_OK = 4;
+/* 目安は ProffieBoard v3 ユーザーマニュアル（Dmitry Shtok）p.35 の実測表から。
+   推奨は 900 kb/s 以上（≒10 本）、BEST 欄は 12〜15 本、BAD 欄は 8 本前後 */
+const SD_GOOD = 15, SD_OK = 10;
 const VOL_SAFE = 1500, VOL_HARD = 3000;
 function volColor(v){
   // 色は上限ではなく音量の値で決める：〜1000 通常、1500 でオレンジ、3000 で赤

@@ -697,7 +697,7 @@ const App = {
   },
 
   stepsHtml(){ return `<ol class="steps">${['step2', 'step3', 'step4'].map(k => `<li><span>${t(k)}</span></li>`).join('')}</ol>`; },
-  troubleHtml(){ return `<ul class="trouble"><li>${t('trouble1')} ${recLink('cable', t('recCable'))}</li><li>${t('trouble2')}</li><li>${t('trouble4')}</li><li>${t('trouble3')}</li></ul>`; },
+  troubleHtml(){ return `<ul class="trouble"><li>${t('trouble1')} ${recLink('cable', t('recCable'))}</li><li>${t('trouble2')}</li><li>${t('trouble4')}</li><li>${t('trouble5')}</li><li>${t('trouble3')}</li></ul>`; },
   welcomeHtml(){
     return `<section class="welcome">
       <div class="w-left">
