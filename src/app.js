@@ -906,20 +906,11 @@ const App = {
     const r = this.sdResult, font = (this.data.presets[this.data.settings.preset] || {}).font || '';
     let h = `<section class="card"><h3>${t('sdTitle')}</h3><p class="hint">${t('sdIntro')}</p>
       <div class="row"><button class="btn primary" id="btnSdTest" ${this.live && !this.busy ? '' : 'disabled'}>${t('sdRun')}</button><span class="hint">${t('sdFont', {f: esc(font.split(';')[0])})}</span></div></section>`;
+    if (this.sdRunning) return h + `<section class="card sdres"><h3>${t('sdResult')}</h3>${this.sdGauge(null)}</section>`;
     if (!r) return h;
     if (r.unsupported) return h + `<section class="card"><p class="warn">${t('sdUnsupported')}</p></section>`;
     const s = r.streams, lv = s >= SD_GOOD ? 'good' : s >= SD_OK ? 'ok' : 'bad';
-    const col = {good: '#37e2ff', ok: '#ff9a3c', bad: '#ff5a6a'}[lv];
-    const p = Math.max(0, Math.min(1, s / 20)), arc = 283;
-    h += `<section class="card sdres"><h3>${t('sdResult')}</h3><div class="sdgrid">
-      <div class="sdring"><svg width="190" height="190" viewBox="0 0 150 150" role="img" aria-label="${t('sdStreams')} ${s.toFixed(1)}">
-        <circle cx="75" cy="75" r="70" fill="none" stroke="rgba(55,226,255,.15)"/>
-        <circle cx="75" cy="75" r="60" fill="none" stroke="rgba(55,226,255,.12)" stroke-width="8" stroke-dasharray="${arc} 94" transform="rotate(135 75 75)"/>
-        <circle cx="75" cy="75" r="60" fill="none" stroke="${col}" stroke-width="8" stroke-dasharray="${(arc * p).toFixed(1)} 377" transform="rotate(135 75 75)" style="filter:drop-shadow(0 0 6px ${col})"/>
-        <circle class="rspin" cx="75" cy="75" r="46" fill="none" stroke="#37e2ff" stroke-opacity=".4" stroke-dasharray="3 6"/>
-        <text x="75" y="80" text-anchor="middle" font-family="PWC Display, sans-serif" font-weight="700" font-size="30" fill="${col}">${s.toFixed(1)}</text>
-        <text x="75" y="99" text-anchor="middle" font-family="PWC Mono, monospace" font-size="9" fill="#7fa8bf">STREAMS</text></svg>
-        <b>${t('sdStreams')}</b></div>
+    h += `<section class="card sdres"><h3>${t('sdResult')}</h3>${this.sdGauge(s, lv)}
       <div class="sdinfo">
         <div class="sdverdict sd-${lv}">${t('sdV_' + lv)}</div>
         <table class="kv"><tr><th>${t('sdSpeed')}</th><td>${Math.round(r.kbps).toLocaleString()} KB/s</td></tr>
@@ -928,13 +919,34 @@ const App = {
         <tr><th>${t('sdFiles')}</th><td>${r.files}</td></tr></table>
         <p class="hint">${t('sdGuide', {g: SD_GOOD, o: SD_OK})}</p>
         ${lv !== 'good' ? `<p>${lang === 'ja' ? recLink('sd', t('sdShop')).replace('class="reclink"', 'class="btn reclink"') : `<a class="btn" href="${shopUrl()}" target="_blank" rel="noopener">${t('sdShop')}</a>`}</p>` : ''}
-      </div></div></section>`;
+      </div></section>`;
     return h;
+  },
+  /** 横ゲージ。s=null は計測中。目盛りは 0〜SD_MAX */
+  sdGauge(s, lv){
+    const pct = v => (Math.max(0, Math.min(SD_MAX, v)) / SD_MAX * 100).toFixed(2) + '%';
+    const anim = s != null && this.sdAnim;
+    const stamp = s == null ? '' : `<span class="sdg-stamp sd-${lv}">${{good: 'BEST', ok: 'GOOD', bad: 'BAD'}[lv]}</span>`;
+    const ticks = Array.from({length: SD_MAX / 5 + 1}, (_, i) => `<span style="left:${pct(i * 5)}">${i * 5}</span>`).join('');
+    return `<div class="sdg ${s == null ? 'running' : 'lv-' + lv} ${anim ? 'anim' : ''}" style="--p:${s == null ? '0%' : pct(s)}">
+      <div class="sdg-head"><span class="sdg-num" data-to="${s == null ? '' : s.toFixed(1)}">${s == null ? '--.-' : anim ? '0.0' : s.toFixed(1)}</span>
+        <span class="sdg-unit mono">STREAMS</span>${stamp}<span class="sdg-cap">${s == null ? t('sdRunning') + '…' : t('sdStreams')}</span></div>
+      <div class="sdg-track"><div class="sdg-fill"></div>
+        <i class="sdg-mk" style="left:${pct(SD_OK)}"></i><i class="sdg-mk best" style="left:${pct(SD_GOOD)}"></i></div>
+      <div class="sdg-scale mono">${ticks}</div></div>`;
+  },
+  animateSd(){
+    const g = document.querySelector('.sdg.anim'); if (!g) return;
+    const num = g.querySelector('.sdg-num'), to = +num.dataset.to, dur = 1400, t0 = performance.now();
+    requestAnimationFrame(() => g.classList.add('go'));
+    const step = now => { const k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3);
+      num.textContent = (to * e).toFixed(1); if (k < 1) requestAnimationFrame(step); else g.classList.add('done'); };
+    requestAnimationFrame(step);
   },
   async sdTest(){
     const d = this.data;
     if (d.on === 1) { showDialog(t('sdTitle'), t('sdTurnOff')); return; }
-    this.setBusy(true); this.progress(t('sdRunning'));
+    this.setBusy(true); this.progress(t('sdRunning')); this.sdRunning = true; this.sdResult = null; this.render();
     try {
       const r = await this.q('sdtest', {timeoutMs: 180000});
       if (r.whut || !/Average speed/i.test(r.text)) { this.sdResult = {unsupported: true}; return; }
@@ -946,8 +958,9 @@ const App = {
       let min = null;
       for (const l of lines) for (const c of l) { const v = val(c); if (min == null || v < min) min = v; }
       this.sdResult = {kbps: sp ? +sp[1] : 0, streams: sp ? +sp[2] : 0, openMs: op ? +op[1] / 1000 : null, minStreams: min, files: lines.length};
+      this.sdAnim = !matchMedia('(prefers-reduced-motion: reduce)').matches;
     } catch (e) { showDialog(t('error'), e.message); }
-    finally { this.setBusy(false); this.render(); }
+    finally { this.sdRunning = false; this.setBusy(false); this.render(); }
   },
 
   backupHtml(){
@@ -1002,7 +1015,7 @@ const App = {
       }, 'onchange');
       on('btnCfgClr', () => { this.cfgOverride = null; this.render(); });
     }
-    if (this.tab === 'sd') on('btnSdTest', () => this.sdTest());
+    if (this.tab === 'sd') { on('btnSdTest', () => this.sdTest()); if (this.sdAnim) { this.animateSd(); this.sdAnim = false; } }
     if (this.tab === 'backup') {
       const list = this.backups();
       on('btnBackup', () => this.manualBackup());

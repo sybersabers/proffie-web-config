@@ -316,6 +316,31 @@
   .presented{margin:0;font-size:10.5px;color:#6f93a8;text-align:center}
   .presented a{color:#9fc3d6;text-decoration:none;letter-spacing:.12em}
   .presented a:hover{color:var(--accent)}
+  .sdg{--c:var(--accent);margin:6px 0 22px}
+  .sdg.lv-ok{--c:var(--warn)} .sdg.lv-bad{--c:var(--bad)}
+  .sdg-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+  .sdg-num{font-family:var(--disp);font-weight:700;font-size:52px;line-height:1;color:var(--c);text-shadow:0 0 18px color-mix(in srgb,var(--c) 55%,transparent);font-variant-numeric:tabular-nums;min-width:3.2ch}
+  .sdg-unit{font-size:12px;letter-spacing:.2em;color:var(--muted)}
+  .sdg-cap{margin-left:auto;font-weight:700;color:#cfe3ee}
+  .sdg-stamp{font-family:var(--disp);font-weight:700;font-size:22px;letter-spacing:.18em;padding:2px 14px;border:2px solid currentColor;color:var(--c);background:color-mix(in srgb,var(--c) 10%,transparent);box-shadow:0 0 14px color-mix(in srgb,var(--c) 35%,transparent)}
+  .sdg-track{position:relative;height:22px;background:repeating-linear-gradient(90deg,rgba(55,226,255,.10) 0 6px,transparent 6px 9px);border:1px solid rgba(55,226,255,.25);clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,0 100%)}
+  .sdg-fill{position:absolute;inset:0 auto 0 0;width:var(--p);background:repeating-linear-gradient(90deg,var(--c) 0 6px,transparent 6px 9px);box-shadow:0 0 14px var(--c);filter:drop-shadow(0 0 6px var(--c))}
+  .sdg-fill::after{content:'';position:absolute;right:-2px;top:-4px;bottom:-4px;width:3px;background:#fff;box-shadow:0 0 10px #fff,0 0 20px var(--c)}
+  .sdg-mk{position:absolute;top:-6px;bottom:-6px;width:0;border-left:1px dashed rgba(255,154,60,.8)}
+  .sdg-mk.best{border-left-color:rgba(55,226,255,.9)}
+  .sdg-scale{position:relative;height:16px;margin-top:6px;font-size:10px;color:var(--muted)}
+  .sdg-scale span{position:absolute;transform:translateX(-50%)}
+  .sdg-scale span:first-child{transform:none} .sdg-scale span:last-child{transform:translateX(-100%)}
+  .sdg.anim .sdg-fill{width:0;transition:width 1.4s cubic-bezier(.2,.8,.2,1)}
+  .sdg.anim.go .sdg-fill{width:var(--p)}
+  .sdg.anim .sdg-stamp{opacity:0;transform:scale(2.2)}
+  .sdg.anim.done .sdg-stamp{animation:stamp .35s cubic-bezier(.2,1.6,.4,1) forwards}
+  .sdg.anim ~ .sdinfo{opacity:0;transform:translateY(6px);transition:opacity .5s .9s,transform .5s .9s}
+  .sdg.anim.go ~ .sdinfo{opacity:1;transform:none}
+  @keyframes stamp{0%{opacity:0;transform:scale(2.2)}100%{opacity:1;transform:scale(1)}}
+  .sdg.running .sdg-num{color:var(--muted);text-shadow:none;animation:pulse 1s infinite}
+  .sdg.running .sdg-fill{width:30%;animation:indet 1.4s linear infinite;--c:var(--accent)}
+  .sdg.running .sdg-fill::after{display:none}
   .sdgrid{display:flex;flex-wrap:wrap;gap:30px;align-items:center}
   .sdring{display:flex;flex-direction:column;align-items:center;gap:4px}
   .sdinfo{flex:1;min-width:280px}
