@@ -668,7 +668,7 @@ const App = {
   renderStatic(){
     document.querySelectorAll('[data-t]').forEach(el => { el.innerHTML = t(el.dataset.t); });
     const s = $('shopLink'); if (s) s.href = shopUrl();
-    const sf = $('shareFoot'); if (sf) sf.innerHTML = `<span>${t('shareThis')}</span>${shareHtml(t('shareText'))}`;
+    const sf = $('shareFoot'); if (sf) sf.innerHTML = `<span>Share</span>${shareHtml(t('shareText'))}`;
     const a = $('affNote'); if (a) { a.hidden = !(AFFILIATE && lang === 'ja'); a.textContent = t('affNote'); }
   },
   /** お問い合わせ：アドレスはページに文字で置かず、押したときに組み立てる（収集対策） */
