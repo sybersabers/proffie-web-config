@@ -287,11 +287,11 @@ const GESTURES = [
   {key: 'stabon', g: 'gesture', type: 'bool', ja: 'スタブオン', en: 'Stab On'},
   {key: 'forcepush', g: 'gesture', type: 'bool', ja: 'フォースプッシュ', en: 'Force Push'},
   {key: 'powerlock', g: 'gesture', type: 'bool', ja: 'パワーロック', en: 'Power Lock'},
-  {key: 'swingonspeed', g: 'gesture', type: 'int', min: 200, max: 500, ja: 'スイングオンの強さ', en: 'Swing On speed', hja: '200〜500（小さいほど軽く振って点灯）', hen: '200–500 (lower = lighter swing)'},
-  {key: 'forcepushlen', g: 'gesture', type: 'int', min: 1, max: 10, ja: 'フォースプッシュの長さ', en: 'Force Push length', hja: '1〜10', hen: '1–10'},
-  {key: 'maxclash', g: 'basic', type: 'int', min: 8, max: 16, ja: '最大クラッシュ音になる強さ', en: 'Hit strength for loudest clash', hja: '8〜16（小さいほど軽く当てても強い音）', hen: '8–16 (lower = lighter hit gives loudest clash)'},
-  {key: 'lockupdelay', g: 'battle', type: 'int', min: 0, max: 1200, ja: 'ロックアップになるまでの時間（ms）', en: 'Lockup delay (ms)', hja: '0〜1200', hen: '0–1200'},
-  {key: 'clashdetect', g: 'battle', type: 'int', min: 0, max: 10, ja: 'バトルモードのクラッシュ検出', en: 'Battle mode clash detect', hja: '0〜10（0 = バトルモード 1.0 の動作）', hen: '0–10 (0 = Battle Mode 1.0 behavior)'}
+  {key: 'swingonspeed', g: 'gesture', type: 'int', min: 200, max: 500, ja: 'スイングオンの強さ', en: 'Swing On speed', hja: '小さいほど軽く振って点灯', hen: 'lower = lighter swing'},
+  {key: 'forcepushlen', g: 'gesture', type: 'int', min: 1, max: 10, ja: 'フォースプッシュの長さ', en: 'Force Push length', hja: '', hen: ''},
+  {key: 'maxclash', g: 'basic', type: 'int', min: 8, max: 16, ja: '最大クラッシュ音になる強さ', en: 'Hit strength for loudest clash', hja: '小さいほど軽く当てても強い音', hen: 'lower = lighter hit gives loudest clash'},
+  {key: 'lockupdelay', g: 'battle', type: 'int', min: 0, max: 1200, ja: 'ロックアップになるまでの時間（ms）', en: 'Lockup delay (ms)', hja: '', hen: ''},
+  {key: 'clashdetect', g: 'battle', type: 'int', min: 0, max: 10, ja: 'バトルモードのクラッシュ検出', en: 'Battle mode clash detect', hja: '0 = バトルモード 1.0 の動作', hen: '0 = Battle Mode 1.0 behavior'}
 ];
 
 /** よく使うセーバーの色（8bit） */

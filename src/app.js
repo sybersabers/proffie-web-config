@@ -851,7 +851,7 @@ const App = {
     if (!any) return `<section class="card"><p>${t('settingsUnavailable')}</p></section>`;
     const oneBtn = +d.board.buttons === 1;
     const G = g => GESTURES.filter(x => x.g === g && !x.hide && d.gestures && d.gestures[x.key] != null && !(oneBtn && x.key === 'powerlock'));
-    const gnum = g => `<label class="gnum">${esc(L(g))}<input type="number" class="setG" data-k="${g.key}" min="${g.min}" max="${g.max}" value="${d.gestures[g.key] ?? ''}"><small>${esc(lang === 'ja' ? g.hja : g.hen)}</small></label>`;
+    const gnum = g => `<label class="gnum">${esc(L(g))}<span class="inl"><input type="number" class="setG" data-k="${g.key}" min="${g.min}" max="${g.max}" value="${d.gestures[g.key] ?? ''}"> / ${g.max}</span>${(lang === 'ja' ? g.hja : g.hen) ? `<small>${esc(lang === 'ja' ? g.hja : g.hen)}</small>` : ''}</label>`;
     const ring = (id, v, min, max, unit) => {
       const p = Math.max(0, Math.min(1, ((+v || 0) - min) / (max - min))), arc = 283, full = 377;
       return `<svg class="ring" data-ring-for="${id}" width="140" height="140" viewBox="0 0 150 150" aria-hidden="true">
@@ -863,7 +863,7 @@ const App = {
         <text class="ru" x="75" y="99" text-anchor="middle" font-size="11" fill="#7fa8bf">${unit}</text></svg>`;
     };
     let h = `<section class="card"><h3>${t('secBasic')}</h3><div class="sgrid">`;
-    if (s.clash != null) { const c1 = (+s.clash).toFixed(1); h += `<label class="gauge">${ring('setClash', c1, 0.5, 10, 'G')}<b>${t('clash')}</b><span class="inl"><input type="number" id="setClash" data-ring data-dec="1" step="0.1" min="0.5" max="10" value="${c1}"> G</span><small>${t('clashHint')}</small></label>`; }
+    if (s.clash != null) { const c1 = (+s.clash).toFixed(1); h += `<label class="gauge">${ring('setClash', c1, 0.5, 10, 'G')}<b>${t('clash')}</b><span class="inl"><input type="number" id="setClash" data-ring data-dec="1" step="0.1" min="0.5" max="10" value="${c1}"> / 10 G</span><small>${t('clashHint')}</small></label>`; }
     if (s.dimming != null) { const v = Math.round(s.dimming / 16384 * 100); h += `<label class="gauge">${ring('setDim', v, 5, 100, '%')}<b>${t('brightness')}</b><span class="inl"><input type="number" id="setDim" data-ring min="5" max="100" step="5" value="${v}"> %</span><small>${t('brightnessHint')}</small></label>`; }
     if (d.blades.some(b => b.max != null)) h += `<div class="lbl"><b>${t('bladeLength')}</b>${d.blades.map(b => `<span class="inl"><span class="ledn">${esc(t('blade', {n: b.blade}))}</span><input type="number" class="setLen" data-b="${b.blade}" min="1" max="${b.max ?? 999}" value="${b.length == null || b.length < 0 ? (b.max ?? '') : b.length}"> / ${b.max ?? '?'}</span>`).join('')}<small>${t('bladeLengthHint')}</small></div>`;
     h += G('basic').map(gnum).join('') + '</div></section>';
