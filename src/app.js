@@ -898,7 +898,7 @@ const App = {
     const J = lang === 'ja', k = buttons === 1 ? 'b1' : 'b2';
     const tbl = (list, title) => `<table class="ctl"><tr><th colspan="2">${title}</th></tr>${CTRL.rows(list, g, defs).map(r =>
       `<tr><td>${J ? r[0] : r[1]}</td><td>${(J ? r[2] : r[3]).replace(/\b(PWR|AUX)\b/g, '<kbd>$1</kbd>')}</td></tr>`).join('')}</table>`;
-    let h = `<div class="sheet-tools"><button class="btn primary" id="btnPrint">${t('printBtn')}</button>
+    let h = `<div class="sheet-tools"><button class="btn primary" id="btnPrint">${t('printBtn')}</button><span class="hint">${t('pdfHint')}</span>
       <span class="hint">${o ? t('srcCfg', {f: esc(o.name)}) : t('srcStd')}${d.gestures ? P().s : ''}${d.gestures ? t('srcBoard') : ''}</span>
       ${this.advanced ? `<span class="sp"></span><button class="btn small" id="btnCfg">${t('loadCfg')}</button><input type="file" id="cfgFile" accept=".h,.txt" hidden>
         ${o ? `<button class="btn small" id="btnCfgClr">${t('clearCfg')}</button>` : ''}` : ''}</div>`;
