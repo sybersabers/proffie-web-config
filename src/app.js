@@ -6,7 +6,7 @@ const SHOW_FX_SELECT = false;
  * ===================================================================== */
 const App = {
   data: null, raw: [], busy: false, tab: 'presets', sel: 0, checked: new Set(), descCache: {},
-  openDetails: new Set(), cfgOverride: null, cfgCode: null, cfgArr: 0, sheetPresets: true, backedUp: false, advanced: false, form: null, dirty: false, linkBlades: true, volUnlocked: false, batTimer: null, live: false,
+  openDetails: new Set(), cfgOverride: null, cfgCode: null, cfgArr: 0, cfgPick: null, pvBlade: 0, sheetPresets: true, backedUp: false, advanced: false, form: null, dirty: false, linkBlades: true, volUnlocked: false, batTimer: null, live: false,
 
   /* ---------------- 起動 ---------------- */
   init(){
@@ -734,6 +734,7 @@ const App = {
     const d = this.data, cur = d.settings.preset, un = this.unnamed().length;
     let h = '';
     if (un) h += `<div class="notice">${t('unnamedN', {n: un})} <button class="btn small" id="btnAutoName">${t('autoName')}</button></div>`;
+    h += this.fxCodeBar();
     h += `<div class="pgrid"><div class="plist-wrap"><div class="plist-head"><b>${t('presetCount', {n: d.presets.length})}</b><span class="hint">${t('presetsHint')}</span></div>`;
     if (this.checked.size) h += `<div class="bulk"><b>${t('selectedN', {n: this.checked.size})}</b><button class="btn small danger" id="btnBulkDel">${t('deleteSelected')}</button><button class="btn small" id="btnBulkClr">${t('clearSel')}</button></div>`;
     h += '<div class="plist">' + d.presets.map((p, i) => `<div class="pitem${i === this.sel ? ' sel' : ''}${this.checked.has(i) ? ' chk' : ''}" data-i="${i}" draggable="${this.live}">
@@ -769,7 +770,7 @@ const App = {
           ${trackOk ? '' : `<small class="warn">${t('notOnSd')}</small>`}<small class="hint" id="fTrackNote">${this.trackNote(f.font)}</small></label>
         ${this.advanced ? `<label>${t('variation')}<input type="number" id="fVar" value="${esc(f.variation)}" step="1"><small>${t('variationHint')}</small></label>` : ''}
       </div>
-      <h3>${t('bladeColors')}</h3>${this.fxCodeBar()}`;
+      <h3>${t('bladeColors')}</h3>`;
     if (p.styles.length > 1) h += `<label class="chk"><input type="checkbox" id="fLink" ${this.linkBlades ? 'checked' : ''}> ${t('linkBlades')}</label>`;
     p.styles.forEach((s, b) => {
       const args = this.argsOf(p, b), main = args.find(a => a.no === 1 && a.type === 'COLOR');
@@ -798,15 +799,43 @@ const App = {
   },
   fxCodeBar(){
     const c = this.cfgCode, d = this.data;
-    if (!c) return `<div class="fxcode-bar"><button class="btn small" id="btnFxCfg">${t('fxCodeLoad')}</button><input type="file" id="fxCfgFile" accept=".h,.txt" hidden></div>`;
     const base = s => (s || '').split('/').pop().replace(/\.h$/i, '').toLowerCase();
-    let h = `<div class="fxcode-bar"><span class="hint mono">${esc(t('fxCodeFile', {f: c.name}))}</span>`;
+    if (!c) {
+      let h = `<div class="notice cfgbar"><span>${t('cfgBarText')}</span><button class="btn small primary" id="btnCfgSd" ${this.live && !this.busy ? '' : 'disabled'}>${t('cfgFromSd')}</button>
+        <button class="btn small" id="btnFxCfg">${t('cfgFromPc')}</button><input type="file" id="fxCfgFile" accept=".h,.txt" hidden></div>`;
+      if (this.cfgPick) h += `<div class="notice cfgbar"><span>${this.cfgPick.length ? t('cfgPickText') : t('cfgNoneOnSd')}</span>${this.cfgPick.length ?
+        `<select id="cfgPickSel">${this.cfgPick.map(x => `<option>${esc(x)}</option>`).join('')}</select><button class="btn small primary" id="btnCfgPick">${t('cfgLoadThis')}</button>` : ''}</div>`;
+      return h;
+    }
+    let h = `<div class="notice cfgbar"><span class="mono">${esc(t('fxCodeFile', {f: c.name}))}${c.src === 'sd' ? ' <small class="hint">(SD)</small>' : ''}</span>`;
     if (c.arrays.length > 1) h += `<select id="fxArr">${c.arrays.map((a, i) => `<option value="${i}"${i === this.cfgArr ? ' selected' : ''}>${esc(a.name)}（${a.presets.length}）</option>`).join('')}</select>`;
-    h += `<button class="btn small" id="btnFxCfgClr">${t('fxCodeClose')}</button></div>`;
+    h += `<span class="hint">${t('cfgLoadedHint')}</span><span class="sp"></span><button class="btn small" id="btnFxCfgClr">${t('fxCodeClose')}</button></div>`;
     if (!c.arrays.length) h += `<p class="warn">${t('fxCodeNone')}</p>`;
     else if (d.board.config && base(c.name) !== base(d.board.config)) h += `<p class="warn">${t('fxCodeWarn', {c: esc(d.board.config.split('/').pop())})}</p>`;
     return h;
   },
+  /** SD カードから config を探して読む。同じ名前が見つからなければ候補を出す */
+  async cfgFromSd(pick){
+    const want = (this.data.board.config || '').split('/').pop();
+    this.setBusy(true); this.progress(t('cfgReading'));
+    try {
+      const cat = async path => { const r = await this.q(`cat ${path}`, {timeoutMs: 120000}); if (r.whut) throw Object.assign(new Error(t('cfgNoCmd')), {title: t('fxCode')}); return /Preset\s+\w+\s*\[/.test(r.text) ? r.text : null; };
+      const tries = pick ? [pick] : want ? [want, 'config/' + want] : [];
+      for (const p of tries) {
+        const txt = await cat(p);
+        if (txt) { this.cfgCode = {name: p.split('/').pop(), src: 'sd', ...CFG.parse(txt)}; this.cfgArr = 0; this.cfgPick = null; this.openFx(); return; }
+      }
+      const list = [];
+      for (const dir of ['', 'config']) {
+        const r = await this.q(dir ? `dir ${dir}` : 'dir', {timeoutMs: 30000});
+        if (r.whut) throw Object.assign(new Error(t('cfgNoCmd')), {title: t('fxCode')});
+        for (const l of r.text.split(/\r?\n/)) { const m = /^(.+?\.h)\s+\d+$/i.exec(l.trim()); if (m) list.push((dir ? dir + '/' : '') + m[1]); }
+      }
+      this.cfgPick = list;
+    } catch (e) { showDialog(e.title || t('error'), e.message); }
+    finally { this.setBusy(false); this.render(); }
+  },
+  openFx(){ for (let b = 0; b < 6; b++) this.openDetails.add('code' + b); },
   fxCodeHtml(s, b){
     const c = this.cfgCode; if (!c || !c.arrays.length) return '';
     const st = PP.style(s), arr = c.arrays[this.cfgArr] || c.arrays[0];
@@ -840,7 +869,7 @@ const App = {
       ['lock', 'actLock', 1], ['drag', 'actDrag', 1], ['lb', 'actLb', 1], ['melt', 'actMelt', 1], ['quote', 'actQuote']];
     return `<section class="pv card"><div class="pv-head"><h3>${t('previewTitle')}</h3>
         <button class="btn small ${active ? '' : 'primary'}" id="btnFontSound">${active ? t('fontSound') : t('switchHere')}</button></div>
-      <div class="cvwrap"><span class="cv-l mono">BLADE.SIM // LED1</span><canvas id="saberCv" width="900" height="110"></canvas></div>
+      <div class="cvwrap"><span class="cv-l mono">BLADE.SIM // ${this.pvLedHtml()}</span><canvas id="saberCv" width="900" height="110"></canvas></div>
       <div class="acts" id="actsBox">${acts.map(([c, k, tg]) => `<button class="btn small act" data-act="${c}">${t(k)}${tg ? ` <small>${lang === 'ja' ? '(入/切)' : '(on/off)'}</small>` : ''}</button>`).join('')}</div>
       <p class="hint">${active ? t('activeHint') : `<span class="warn">${t('notActiveHint')}</span>`}　${t('previewNote')}</p>
       <div class="pv-row">
@@ -865,14 +894,20 @@ const App = {
     });
   },
   /** プレビュー用の色（編集中の値をそのまま反映） */
+  pvLedHtml(){
+    const p = this.data.presets[this.sel], n = p ? p.styles.length : 1, cur = Math.min(this.pvBlade, n - 1);
+    if (n < 2) return 'LED1';
+    return Array.from({length: n}, (_, i) => `<button class="pvled${i === cur ? ' on' : ''}" data-pvb="${i}">LED${i + 1}</button>`).join('');
+  },
   previewColors(){
     const p = this.data && this.data.presets[this.sel];
     if (!p || !this.form) return null;
+    const B = Math.min(this.pvBlade, p.styles.length - 1);
     const rgb = v => { const c = PP.color16(v); return c ? [c.r, c.g, c.b] : null; };
     const val = (b, k) => { const a = this.argsOf(p, b).find(x => x.no === k); return a ? rgb(this.effective(b, k)) : null; };
     const num = (b, k, def) => { const a = this.argsOf(p, b).find(x => x.no === k); const v = a ? parseInt(this.effective(b, k), 10) : NaN; return isNaN(v) || v <= 0 ? def : v; };
-    return {base: val(0, 1), clash: val(0, 10), blast: val(0, 9), lockup: val(0, 11), drag: val(0, 13), lb: val(0, 15), stab: val(0, 16),
-      ign: num(0, 5, 300), ret: num(0, 26, 500), lockPos: num(0, 12, 16384) / 32768, accents: p.styles.slice(1).map((_, x) => val(x + 1, 1) || [180, 180, 180])};
+    return {base: val(B, 1), clash: val(B, 10), blast: val(B, 9), lockup: val(B, 11), drag: val(B, 13), lb: val(B, 15), stab: val(B, 16),
+      ign: num(B, 5, 300), ret: num(B, 26, 500), lockPos: num(B, 12, 16384) / 32768, accents: p.styles.slice(1).map((_, x) => val(x + 1, 1) || [180, 180, 180])};
   },
 
   settingsHtml(){
@@ -1046,11 +1081,13 @@ const App = {
       on('btnFxCfg', () => $('fxCfgFile').click());
       on('fxCfgFile', async e => {
         const f = e.target.files[0]; e.target.value = ''; if (!f) return;
-        this.cfgCode = {name: f.name, ...CFG.parse(await f.text())}; this.cfgArr = 0;
-        for (let b = 0; b < 4; b++) this.openDetails.add('code' + b);
+        this.cfgCode = {name: f.name, src: 'pc', ...CFG.parse(await f.text())}; this.cfgArr = 0; this.cfgPick = null; this.openFx();
         this.render();
       }, 'onchange');
       on('btnFxCfgClr', () => { this.cfgCode = null; this.render(); });
+      on('btnCfgSd', () => this.cfgFromSd());
+      on('btnCfgPick', () => this.cfgFromSd($('cfgPickSel').value));
+      document.querySelectorAll('.pvled').forEach(el => el.addEventListener('click', () => { this.pvBlade = +el.dataset.pvb; this.render(); }));
       on('fxArr', e => { this.cfgArr = +e.target.value; this.render(); }, 'onchange');
       document.querySelectorAll('.fxcopy').forEach(btn => btn.addEventListener('click', async () => {
         try { await navigator.clipboard.writeText(btn.previousElementSibling.textContent); toast(t('copiedOk')); } catch { toast(t('error')); }
