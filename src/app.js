@@ -23,6 +23,10 @@ const App = {
     $('btnDisconnect').onclick = () => Proffie.disconnect();
     $('dlgOk').onclick = () => $('dlg').close();
     $('mailLink').onclick = e => { e.preventDefault(); this.openMail(); };
+    document.addEventListener('click', async e => {
+      const b = e.target.closest('.shr-link'); if (!b) return;
+      try { await navigator.clipboard.writeText(b.dataset.copy); toast(t('shareCopied')); } catch { toast(t('error')); }
+    });
     Proffie.onChange = () => { if (!Proffie.connected) { this.live = false; clearInterval(this.batTimer); } this.renderAll(); };
     window.addEventListener('beforeunload', e => { if (this.busy) { e.preventDefault(); e.returnValue = t('leaveWarn'); } });
     this.renderAll();
@@ -664,6 +668,7 @@ const App = {
   renderStatic(){
     document.querySelectorAll('[data-t]').forEach(el => { el.innerHTML = t(el.dataset.t); });
     const s = $('shopLink'); if (s) s.href = shopUrl();
+    const sf = $('shareFoot'); if (sf) sf.innerHTML = `<span>${t('shareThis')}</span>${shareHtml(t('shareText'))}`;
     const a = $('affNote'); if (a) { a.hidden = !(AFFILIATE && lang === 'ja'); a.textContent = t('affNote'); }
   },
   /** お問い合わせ：アドレスはページに文字で置かず、押したときに組み立てる（収集対策） */
@@ -926,6 +931,7 @@ const App = {
         ${r.openMs != null ? `<tr><th>${t('sdOpen')}</th><td>${r.openMs.toFixed(1)} ms</td></tr>` : ''}
         <tr><th>${t('sdFiles')}</th><td>${r.files}</td></tr></table>
         <p class="hint">${t('sdGuide', {g: SD_GOOD, o: SD_OK})}</p>
+        <div class="sdshare"><b>${t('sdShare')}</b>${shareHtml(t('sdShareText', {s: s.toFixed(1), lv: {good: 'BEST', ok: 'LOW', bad: 'BAD'}[lv]}))}</div>
         ${lv !== 'good' ? `<p>${lang === 'ja' ? recLink('sd', t('sdShop')).replace('class="reclink"', 'class="btn reclink"') : `<a class="btn" href="${shopUrl()}" target="_blank" rel="noopener">${t('sdShop')}</a>`}</p>` : ''}
       </div></section>`;
     return h;

@@ -318,6 +318,13 @@
   .presented a:hover{color:var(--accent)}
   .pvled{font:inherit;font-size:inherit;letter-spacing:inherit;color:var(--muted);background:none;border:1px solid rgba(55,226,255,.25);padding:0 6px;margin-left:4px;cursor:pointer;pointer-events:auto}
   .pvled.on{color:#06131a;background:var(--accent);border-color:var(--accent)}
+  .share{display:inline-flex;align-items:center;gap:8px;vertical-align:middle}
+  .shr{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;color:#9fc3d6;background:rgba(55,226,255,.06);border:1px solid rgba(55,226,255,.25);cursor:pointer;padding:0;transition:color .15s,border-color .15s,background .15s}
+  .shr svg{width:15px;height:15px}
+  .shr:hover{color:#fff;border-color:var(--accent);background:rgba(55,226,255,.15)}
+  .shr-line:hover{color:#06c755} .shr-fb:hover{color:#4c8dff}
+  #shareFoot{display:flex;align-items:center;gap:10px}
+  .sdshare{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:14px;padding-top:12px;border-top:1px solid rgba(55,226,255,.15)}
   .sdg{--c:var(--accent);margin:6px 0 22px}
   .sdg.lv-ok{--c:var(--warn)} .sdg.lv-bad{--c:var(--bad)}
   .sdg-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:10px}
@@ -392,7 +399,7 @@
 <main id="main"></main>
 <div id="boot" aria-live="polite"><div class="boot-in"><div class="boot-bar"><span id="bootFill"></span><b id="bootPct">0</b></div><div class="boot-step mono" id="bootStep"></div><div class="boot-sub mono" id="bootSub"></div></div></div>
 
-<footer><p class="shop"><span data-t="madeBy"></span> <a id="shopLink" target="_blank" rel="noopener"><b>SYBER SABERS</b></a></p><p><a href="#" id="mailLink" data-t="contact"></a></p><p data-t="privacy"></p><p data-t="disclaimer"></p><p id="affNote" hidden></p><p>ProffieOS © Fredrik Hubinette — <a href="https://pod.hubbe.net/" target="_blank" rel="noopener" data-t="footerDocs"></a></p></footer>
+<footer><p class="shop"><span data-t="madeBy"></span> <a id="shopLink" target="_blank" rel="noopener"><b>SYBER SABERS</b></a></p><p><a href="#" id="mailLink" data-t="contact"></a></p><p id="shareFoot"></p><p data-t="privacy"></p><p data-t="disclaimer"></p><p id="affNote" hidden></p><p>ProffieOS © Fredrik Hubinette — <a href="https://pod.hubbe.net/" target="_blank" rel="noopener" data-t="footerDocs"></a></p></footer>
 
 <dialog id="dlg"><h3 id="dlgTitle"></h3><p id="dlgBody"></p><div class="actions"><button class="btn primary" id="dlgOk">OK</button></div></dialog>
 <div class="toast" id="toast"></div>

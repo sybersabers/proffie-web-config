@@ -50,6 +50,19 @@ const recLink = (key, label) => lang === 'ja'
 /* 目安は ProffieBoard v3 ユーザーマニュアル（Dmitry Shtok）p.35 の実測表から。
    推奨は 900 kb/s 以上（≒10 本）、BEST 欄は 12〜15 本、BAD 欄は 8 本前後 */
 const clampNum = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+/** シェア（SNS の公式スクリプトは読み込まず、ただのリンクにする） */
+const SITE_URL = 'https://webconfig.sybersabers.com/', SHARE_TAG = 'ProffieWebConfig';
+const SHARE_ICON = {
+  x: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.9 1.15h3.68l-8.04 9.19L24 22.85h-7.4l-5.8-7.58-6.64 7.58H.47l8.6-9.83L0 1.15h7.6l5.24 6.93zm-1.29 19.5h2.04L6.49 3.24H4.3z"/></svg>',
+  fb: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.1 10.13 24v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.69 4.53-4.69 1.31 0 2.69.24 2.69.24v2.97h-1.52c-1.49 0-1.96.93-1.96 1.89v2.25h3.33l-.53 3.49h-2.8V24C19.61 23.1 24 18.1 24 12.07z"/></svg>',
+  line: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2C6.2 2 1.5 5.8 1.5 10.5c0 4.2 3.7 7.7 8.8 8.4.3.1.8.2.9.5.1.3.1.7 0 1l-.1.9c0 .3-.2 1 .9.5s6-3.5 8.2-6c1.5-1.7 2.3-3.4 2.3-5.3C22.5 5.8 17.8 2 12 2zM8 13.3H5.9c-.3 0-.5-.2-.5-.5V8.6c0-.3.2-.5.5-.5s.5.2.5.5v3.7H8c.3 0 .5.2.5.5s-.2.5-.5.5zm2.2-.5c0 .3-.2.5-.5.5s-.5-.2-.5-.5V8.6c0-.3.2-.5.5-.5s.5.2.5.5v4.2zm5 0c0 .2-.1.4-.3.5h-.2c-.2 0-.3-.1-.4-.2l-2.1-2.9v2.6c0 .3-.2.5-.5.5s-.5-.2-.5-.5V8.6c0-.2.1-.4.3-.5h.2c.2 0 .3.1.4.2l2.1 2.9V8.6c0-.3.2-.5.5-.5s.5.2.5.5v4.2zm3.4-2.6c.3 0 .5.2.5.5s-.2.5-.5.5h-1.6v1.1h1.6c.3 0 .5.2.5.5s-.2.5-.5.5h-2.1c-.3 0-.5-.2-.5-.5V8.6c0-.3.2-.5.5-.5h2.1c.3 0 .5.2.5.5s-.2.5-.5.5h-1.6v1.1h1.6z"/></svg>',
+  link: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1.2 1.2M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1.2-1.2"/></svg>'
+};
+function shareHtml(text, cls = ''){
+  const u = encodeURIComponent(SITE_URL), tx = encodeURIComponent(text);
+  const a = (k, href, label) => `<a class="shr shr-${k}" href="${href}" target="_blank" rel="noopener" title="${label}" aria-label="${label}">${SHARE_ICON[k]}</a>`;
+  return `<span class="share ${cls}">${a('x', `https://twitter.com/intent/tweet?text=${tx}&url=${u}&hashtags=${SHARE_TAG}`, 'X')}${a('fb', `https://www.facebook.com/sharer/sharer.php?u=${u}`, 'Facebook')}${a('line', `https://social-plugins.line.me/lineit/share?url=${u}&text=${tx}`, 'LINE')}<button class="shr shr-link" data-copy="${esc(text + ' #' + SHARE_TAG + ' ' + SITE_URL)}" title="${t('shareCopy')}" aria-label="${t('shareCopy')}">${SHARE_ICON.link}</button></span>`;
+}
 const SD_GOOD = 15, SD_OK = 10, SD_FULL = 25;
 /** ゲージ上の位置（%）。BAD 0〜10 を 40%、GOOD 10〜15 を 20%、BEST 15〜25 を 40%。25 以上は満タン */
 const sdPos = v => v >= SD_FULL ? 100 : v >= SD_GOOD ? 60 + (v - SD_GOOD) / (SD_FULL - SD_GOOD) * 40 : v >= SD_OK ? 40 + (v - SD_OK) / (SD_GOOD - SD_OK) * 20 : Math.max(0, v) / SD_OK * 40;
