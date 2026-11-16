@@ -495,7 +495,7 @@ const App = {
   async saveSettings(){
     const d = this.data, s = d.settings, cmds = [];
     const c = parseFloat(($('setClash') || {}).value);
-    if (s.clash != null && c > 0 && Math.abs(c - s.clash) > 1e-6) cmds.push(`set_clash_threshold ${c}`);
+    if (s.clash != null && c > 0) { const cc = clampNum(c, 0.5, 10); if (Math.abs(cc - s.clash) > 1e-6) cmds.push(`set_clash_threshold ${cc}`); }
     const dm = $('setDim');
     if (s.dimming != null && dm) { const v = Math.round(Math.max(5, Math.min(100, +dm.value)) / 100 * 16384); if (Math.abs(v - s.dimming) > 82) cmds.push(`set_blade_dimming ${v}`); }
     document.querySelectorAll('.setLen').forEach(el => {
@@ -504,7 +504,9 @@ const App = {
       if (v > 0 && v !== cur) cmds.push(`set_blade_length ${b.blade} ${Math.min(v, b.max ?? v)}`);
     });
     document.querySelectorAll('.setG').forEach(el => {
-      const k = el.dataset.k, v = el.type === 'checkbox' ? (el.checked ? 1 : 0) : parseInt(el.value, 10);
+      const k = el.dataset.k, def = GESTURES.find(g => g.key === k) || {};
+      let v = el.type === 'checkbox' ? (el.checked ? 1 : 0) : parseInt(el.value, 10);
+      if (!isNaN(v) && def.min != null) v = clampNum(v, def.min, def.max);
       if (!isNaN(v) && v !== d.gestures[k]) cmds.push(`set_gesture ${k} ${v}`);
     });
     if (!cmds.length) { toast(t('noChanges')); return; }
@@ -818,7 +820,7 @@ const App = {
           <button class="btn small" id="btnPlay">${t('play')}</button><button class="btn small" id="btnStopT">${t('stop')}</button></div>
       </div>
       ${s.volume != null ? `<label class="chk small"><input type="checkbox" id="volUnlock" ${this.volUnlocked ? 'checked' : ''}> ${t('volUnlock')}</label>` : ''}
-      ${s.volume > VOL_SAFE && !this.volUnlocked ? `<p class="warn">${t('volOver', {v: s.volume})}</p>` : ''}</section>`;
+      </section>`;
   },
   /** エフェクトボタンの見た目を今の状態に合わせる（点灯中・消灯中・入/切中を光らせる） */
   updateActs(){
@@ -996,7 +998,15 @@ const App = {
       this.tab = b.dataset.tab; this.render();
     });
     if (this.tab === 'presets') this.bindPresets(on, all);
-    if (this.tab === 'settings') on('btnSaveSet', () => this.saveSettings());
+    if (this.tab === 'settings') {
+      on('btnSaveSet', () => this.saveSettings());
+      // 範囲外の値は、入力し終えた時点で範囲内に直す
+      document.querySelectorAll('.tabbody input[type=number][min][max]').forEach(el => el.addEventListener('change', () => {
+        const v = parseFloat(el.value); if (isNaN(v)) return;
+        const c = clampNum(v, +el.min, +el.max);
+        if (c !== v) { el.value = el.dataset.dec ? c.toFixed(+el.dataset.dec) : c; el.dispatchEvent(new Event('input')); toast(t('clamped', {min: el.min, max: el.max})); }
+      }));
+    }
     document.querySelectorAll('input[data-ring]').forEach(el => el.addEventListener('input', () => {
       const r = document.querySelector(`svg[data-ring-for="${el.id}"]`); if (!r) return;
       const min = +el.min, max = +el.max, p = Math.max(0, Math.min(1, ((+el.value || 0) - min) / (max - min)));

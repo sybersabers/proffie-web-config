@@ -50,7 +50,7 @@ ja: {
   palette: 'よく使うカラー', custom: '自由に選ぶ', resetDefault: '既定のカラーに戻す',
   // control
   volume: '音量', volMaxNote: '上限 {max}', volUnlock: '上限を外す（〜3000・スピーカー故障の恐れあり）',
-  volOver: '⚠ 音量 {v} は上限超え',
+  clamped: '{min}〜{max} の範囲に直しました',
   effects: 'エフェクトを試す', bgm: 'BGM を再生', play: '▶ 再生', stop: '■ 停止',
   actOn: '点灯', actOff: '消灯', actClash: 'クラッシュ', actBlast: 'ブラスター', actStab: 'スタブ', actForce: 'フォース',
   actLock: 'ロックアップ', actDrag: 'ドラッグ', actLb: 'ライトニングブロック', actMelt: 'メルト', actQuote: 'クォート',
@@ -177,7 +177,7 @@ en: {
   variation: 'Hue shift (variation)', variationHint: '0 = original color',
   palette: 'Popular colors', custom: 'Pick any color', resetDefault: 'Reset to default color',
   volume: 'Volume', volMaxNote: 'Limit {max} (to protect the speaker)', volUnlock: 'Remove limit (up to 3000 – may damage the speaker)',
-  volOver: '⚠ Current volume {v} is above the recommended limit',
+  clamped: 'Adjusted to the range {min}–{max}',
   effects: 'Try effects', bgm: 'Play track', play: '▶ Play', stop: '■ Stop',
   actOn: 'Ignite', actOff: 'Retract', actClash: 'Clash', actBlast: 'Blast', actStab: 'Stab', actForce: 'Force',
   actLock: 'Lockup', actDrag: 'Drag', actLb: 'Lightning block', actMelt: 'Melt', actQuote: 'Quote',

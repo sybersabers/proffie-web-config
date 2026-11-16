@@ -49,6 +49,7 @@ const recLink = (key, label) => lang === 'ja'
 /** SD チェックの目安（同時に鳴らせる音の数）。仮の値：実測で調整する */
 /* 目安は ProffieBoard v3 ユーザーマニュアル（Dmitry Shtok）p.35 の実測表から。
    推奨は 900 kb/s 以上（≒10 本）、BEST 欄は 12〜15 本、BAD 欄は 8 本前後 */
+const clampNum = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 const SD_GOOD = 15, SD_OK = 10, SD_FULL = 25;
 /** ゲージ上の位置（%）。BAD 0〜10 を 40%、GOOD 10〜15 を 20%、BEST 15〜25 を 40%。25 以上は満タン */
 const sdPos = v => v >= SD_FULL ? 100 : v >= SD_GOOD ? 60 + (v - SD_GOOD) / (SD_FULL - SD_GOOD) * 40 : v >= SD_OK ? 40 + (v - SD_OK) / (SD_GOOD - SD_OK) * 20 : Math.max(0, v) / SD_OK * 40;
